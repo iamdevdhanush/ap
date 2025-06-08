@@ -1,0 +1,1058 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Library Management System</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        :root {
+            --primary: #1a73e8;
+            --secondary: #0d47a1;
+            --success: #28a745;
+            --warning: #ff9800;
+            --danger: #dc3545;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --card-blue: #d4e9f9;
+            --card-green: #d1f0ff;
+            --card-orange: #ffeed9;
+            --card-purple: #e9d8f9;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f5faff 0%, #e3f2fd 100%);
+            color: #2c3e50;
+            min-height: 100vh;
+            padding-bottom: 40px;
+            transition: background 0.3s ease;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Header & Navigation */
+        header.navbar {
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            padding: 0 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .navbar nav ul {
+            display: flex;
+            justify-content: center;
+            list-style: none;
+            padding: 0;
+        }
+
+        .navbar nav ul li {
+            margin: 0;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 18px 24px;
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 17px;
+            transition: all 0.3s ease;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .nav-item i {
+            margin-right: 10px;
+            font-size: 20px;
+        }
+
+        .nav-item:hover {
+            background-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .nav-item.active {
+            background-color: rgba(255, 255, 255, 0.25);
+        }
+
+        .nav-item.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background-color: #ffd54f;
+        }
+
+        /* Page Header */
+        .page-header {
+            text-align: center;
+            margin: 40px 0 30px;
+            padding: 0 20px;
+        }
+
+        .page-header h1 {
+            font-size: 2.8rem;
+            color: #1a237e;
+            margin-bottom: 15px;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .page-header p {
+            font-size: 1.2rem;
+            color: #455a64;
+            max-width: 700px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        /* Dashboard Cards */
+        .dashboard {
+            padding: 20px;
+        }
+
+        .card-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            height: 200px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 25px;
+            border: none;
+            text-align: center;
+        }
+
+        .card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+        }
+
+        .card:nth-child(1)::before { background: linear-gradient(to right, #4caf50, #8bc34a); }
+        .card:nth-child(2)::before { background: linear-gradient(to right, #2196f3, #03a9f4); }
+        .card:nth-child(3)::before { background: linear-gradient(to right, #ff9800, #ffc107); }
+        .card:nth-child(4)::before { background: linear-gradient(to right, #e91e63, #f48fb1); }
+
+        .icon-wrapper {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .card i.fa-3x {
+            font-size: 3.5rem;
+            margin-bottom: 15px;
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover i.fa-3x {
+            transform: scale(1.1);
+        }
+
+        .card .fa-cog, 
+        .card .fa-check, 
+        .card .fa-undo-alt {
+            position: absolute;
+            right: -10px;
+            top: -10px;
+            background: white;
+            border-radius: 50%;
+            padding: 8px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
+            font-size: 1.2rem;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .card .fa-cog { color: #2196f3; }
+        .card .fa-check { color: #4caf50; }
+        .card .fa-undo-alt { color: #ff9800; }
+
+        .card h3 {
+            font-size: 1.5rem;
+            margin: 0;
+            color: #263238;
+            font-weight: 600;
+        }
+
+        .card p {
+            color: #546e7a;
+            margin-top: 12px;
+            font-size: 1rem;
+            line-height: 1.5;
+        }
+
+        /* Stats Section */
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 25px;
+            max-width: 1200px;
+            margin: 50px auto 30px;
+            padding: 0 20px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            text-align: center;
+        }
+
+        .stat-card i {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+            color: #1a73e8;
+        }
+
+        .stat-card h4 {
+            font-size: 1.1rem;
+            color: #546e7a;
+            margin-bottom: 10px;
+        }
+
+        .stat-card .value {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: #1a237e;
+        }
+
+        /* Form Styles */
+        .form-container {
+            max-width: 500px;
+            margin: 40px auto;
+            background: white;
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        }
+
+        .form-header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .form-header h2 {
+            color: #1a237e;
+            font-size: 2rem;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            border-color: #1a73e8;
+            box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.2);
+            outline: none;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 12px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            background: var(--secondary);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-success {
+            background: var(--success);
+        }
+
+        .btn-success:hover {
+            background: #218838;
+        }
+
+        .links {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .links a {
+            color: var(--primary);
+            text-decoration: none;
+            margin: 0 10px;
+            font-weight: 500;
+        }
+
+        .links a:hover {
+            text-decoration: underline;
+        }
+
+        /* Books and Members Tables */
+        .table-container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            padding: 25px;
+            margin: 30px auto;
+            max-width: 1200px;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        tr:hover {
+            background-color: #f1f8ff;
+        }
+
+        .action-btn {
+            padding: 8px 12px;
+            margin-right: 5px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+
+        .edit-btn {
+            background-color: #ffc107;
+            color: #212529;
+        }
+
+        .delete-btn {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .issue-btn {
+            background-color: #28a745;
+            color: white;
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            margin-top: 50px;
+            padding: 25px;
+            color: #546e7a;
+            font-size: 1rem;
+        }
+
+        /* Page Transitions */
+        .page {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .navbar nav ul {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .nav-item {
+                width: 100%;
+                justify-content: center;
+            }
+            
+            .page-header h1 {
+                font-size: 2.2rem;
+            }
+            
+            .card-container {
+                grid-template-columns: 1fr;
+                max-width: 500px;
+            }
+            
+            .stats-container {
+                grid-template-columns: 1fr;
+                max-width: 500px;
+            }
+
+            .table-container {
+                padding: 15px;
+            }
+            
+            th, td {
+                padding: 10px;
+                font-size: 0.9rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .nav-item {
+                padding: 15px;
+                font-size: 16px;
+            }
+            
+            .page-header h1 {
+                font-size: 1.8rem;
+            }
+            
+            .page-header p {
+                font-size: 1rem;
+            }
+
+            .form-container {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Navigation Bar -->
+        <header class="navbar">
+            <nav>
+                <ul>
+                    <li class="nav-item" data-page="home"><i class="fas fa-home"></i> Home</li>
+                    <li class="nav-item" data-page="books"><i class="fas fa-book"></i> Books</li>
+                    <li class="nav-item" data-page="members"><i class="fas fa-users"></i> Members</li>
+                    <li class="nav-item" id="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</li>
+                </ul>
+            </nav>
+        </header>
+
+        <!-- Home Page -->
+        <div id="home-page" class="page active">
+            <div class="page-header">
+                <h1>Library Management System</h1>
+                <p>Manage your library resources efficiently with our comprehensive system. Track books, members, and transactions with ease.</p>
+            </div>
+
+            <div class="stats-container">
+                <div class="stat-card">
+                    <i class="fas fa-book"></i>
+                    <h4>Total Books</h4>
+                    <div class="value" id="total-books">0</div>
+                </div>
+                <div class="stat-card">
+                    <i class="fas fa-users"></i>
+                    <h4>Active Members</h4>
+                    <div class="value" id="total-members">0</div>
+                </div>
+                <div class="stat-card">
+                    <i class="fas fa-exchange-alt"></i>
+                    <h4>Transactions Today</h4>
+                    <div class="value">187</div>
+                </div>
+                <div class="stat-card">
+                    <i class="fas fa-clock"></i>
+                    <h4>Overdue Books</h4>
+                    <div class="value">63</div>
+                </div>
+            </div>
+
+            <main class="dashboard">
+                <div class="card-container">
+                    <button class="card" data-page="books">
+                        <div class="icon-wrapper">
+                            <i class="fas fa-book fa-3x" aria-hidden="true"></i>
+                            <i class="fas fa-cog" aria-hidden="true"></i>
+                        </div>
+                        <h3>Manage Books</h3>
+                        <p>Add, edit, or remove books from the library collection</p>
+                    </button>
+
+                    <button class="card" data-page="members">
+                        <div class="icon-wrapper">
+                            <i class="fas fa-users fa-3x" aria-hidden="true"></i>
+                            <i class="fas fa-cog" aria-hidden="true"></i>
+                        </div>
+                        <h3>Manage Members</h3>
+                        <p>Register new members and manage existing accounts</p>
+                    </button>
+
+                    <button class="card" id="issue-book-btn">
+                        <div class="icon-wrapper">
+                            <i class="fas fa-book fa-3x" aria-hidden="true"></i>
+                            <i class="fas fa-check" aria-hidden="true"></i>
+                        </div>
+                        <h3>Issue Book</h3>
+                        <p>Check out books to registered library members</p>
+                    </button>
+
+                    <button class="card" id="return-book-btn">
+                        <div class="icon-wrapper">
+                            <i class="fas fa-book fa-3x" aria-hidden="true"></i>
+                            <i class="fas fa-undo-alt" aria-hidden="true"></i>
+                        </div>
+                        <h3>Return Book</h3>
+                        <p>Process book returns and check for overdue fees</p>
+                    </button>
+                </div>
+            </main>
+
+            <footer>
+                <p>Library Management System &copy; 2023 | All Rights Reserved</p>
+            </footer>
+        </div>
+
+        <!-- Books Page -->
+        <div id="books-page" class="page">
+            <div class="page-header">
+                <h1>Manage Books</h1>
+                <p>Add new books to the library collection, update existing information, or remove outdated titles.</p>
+            </div>
+
+            <div class="form-container">
+                <div class="form-header">
+                    <h2>Add New Book</h2>
+                </div>
+                <form id="book-form">
+                    <div class="form-group">
+                        <label for="book-title">Book Title</label>
+                        <input type="text" id="book-title" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="book-author">Author</label>
+                        <input type="text" id="book-author" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="book-isbn">ISBN</label>
+                        <input type="text" id="book-isbn" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="book-category">Category</label>
+                        <select id="book-category">
+                            <option value="Fiction">Fiction</option>
+                            <option value="Non-Fiction">Non-Fiction</option>
+                            <option value="Science">Science</option>
+                            <option value="History">History</option>
+                            <option value="Biography">Biography</option>
+                            <option value="Technology">Technology</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-success">Add Book</button>
+                </form>
+            </div>
+
+            <div class="table-container">
+                <h2 style="margin-bottom: 20px;">Book Inventory</h2>
+                <table id="books-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Title</th>
+                            <th>Author</th>
+                            <th>ISBN</th>
+                            <th>Category</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="books-list">
+                        <!-- Books will be dynamically added here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Members Page -->
+        <div id="members-page" class="page">
+            <div class="page-header">
+                <h1>Manage Members</h1>
+                <p>Register new library members, update existing member information, or manage accounts.</p>
+            </div>
+
+            <div class="form-container">
+                <div class="form-header">
+                    <h2>Add New Member</h2>
+                </div>
+                <form id="member-form">
+                    <div class="form-group">
+                        <label for="member-name">Full Name</label>
+                        <input type="text" id="member-name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="member-email">Email</label>
+                        <input type="email" id="member-email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="member-phone">Phone</label>
+                        <input type="tel" id="member-phone" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="member-type">Member Type</label>
+                        <select id="member-type">
+                            <option value="Student">Student</option>
+                            <option value="Faculty">Faculty</option>
+                            <option value="Staff">Staff</option>
+                            <option value="Researcher">Researcher</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-success">Add Member</button>
+                </form>
+            </div>
+
+            <div class="table-container">
+                <h2 style="margin-bottom: 20px;">Library Members</h2>
+                <table id="members-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Type</th>
+                            <th>Books Borrowed</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="members-list">
+                        <!-- Members will be dynamically added here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Login Page -->
+        <div id="login-page" class="page">
+            <div class="form-container">
+                <div class="form-header">
+                    <h2>Login</h2>
+                </div>
+                <form id="login-form">
+                    <div class="form-group">
+                        <label for="username">Username</label>
+                        <input type="text" id="username" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" required>
+                    </div>
+                    <button type="submit" class="btn">Login</button>
+                    <div class="links">
+                        <a href="#" id="show-signup">Create Account</a>
+                        <a href="#" id="show-home">Home</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Signup Page -->
+        <div id="signup-page" class="page">
+            <div class="form-container">
+                <div class="form-header">
+                    <h2>Sign Up</h2>
+                </div>
+                <form id="signup-form">
+                    <div class="form-group">
+                        <label for="fullname">Full Name</label>
+                        <input type="text" id="fullname" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="signup-email">Email</label>
+                        <input type="email" id="signup-email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="signup-password">Password</label>
+                        <input type="password" id="signup-password" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="signup-type">User Type</label>
+                        <select id="signup-type">
+                            <option value="student">Student</option>
+                            <option value="librarian">Librarian</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn">Sign Up</button>
+                    <div class="links">
+                        <a href="#" id="show-login">Already have an account? Login</a>
+                        <a href="#" id="show-home2">Home</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize sample data
+        const books = [
+            { id: 1, title: "The Great Gatsby", author: "F. Scott Fitzgerald", isbn: "9780743273565", category: "Fiction", status: "Available" },
+            { id: 2, title: "To Kill a Mockingbird", author: "Harper Lee", isbn: "9780061120084", category: "Fiction", status: "Available" },
+            { id: 3, title: "1984", author: "George Orwell", isbn: "9780451524935", category: "Fiction", status: "Checked Out" },
+            { id: 4, title: "A Brief History of Time", author: "Stephen Hawking", isbn: "9780553380163", category: "Science", status: "Available" },
+        ];
+
+        const members = [
+            { id: 1, name: "John Smith", email: "john@example.com", phone: "555-1234", type: "Student", books: 2 },
+            { id: 2, name: "Sarah Johnson", email: "sarah@example.com", phone: "555-5678", type: "Faculty", books: 1 },
+            { id: 3, name: "Michael Brown", email: "michael@example.com", phone: "555-9012", type: "Researcher", books: 3 },
+            { id: 4, name: "Emily Davis", email: "emily@example.com", phone: "555-3456", type: "Student", books: 0 },
+        ];
+
+        // DOM elements
+        const pages = {
+            home: document.getElementById('home-page'),
+            books: document.getElementById('books-page'),
+            members: document.getElementById('members-page'),
+            login: document.getElementById('login-page'),
+            signup: document.getElementById('signup-page')
+        };
+
+        const navItems = document.querySelectorAll('.nav-item');
+        const logoutBtn = document.getElementById('logout-btn');
+        const showSignup = document.getElementById('show-signup');
+        const showLogin = document.getElementById('show-login');
+        const showHomeLinks = document.querySelectorAll('[id^="show-home"]');
+        const cards = document.querySelectorAll('.card');
+        const bookForm = document.getElementById('book-form');
+        const memberForm = document.getElementById('member-form');
+        const loginForm = document.getElementById('login-form');
+        const signupForm = document.getElementById('signup-form');
+        const booksList = document.getElementById('books-list');
+        const membersList = document.getElementById('members-list');
+        const totalBooks = document.getElementById('total-books');
+        const totalMembers = document.getElementById('total-members');
+
+        // Initialize the application
+        function initApp() {
+            // Set active page
+            showPage('home');
+            
+            // Render data
+            renderBooks();
+            renderMembers();
+            updateStats();
+            
+            // Add event listeners
+            setupEventListeners();
+        }
+
+        // Show the selected page
+        function showPage(pageName) {
+            // Hide all pages
+            Object.values(pages).forEach(page => {
+                page.classList.remove('active');
+            });
+            
+            // Show the selected page
+            pages[pageName].classList.add('active');
+            
+            // Update active nav item
+            navItems.forEach(item => {
+                item.classList.remove('active');
+                if (item.dataset.page === pageName) {
+                    item.classList.add('active');
+                }
+            });
+        }
+
+        // Render books in the table
+        function renderBooks() {
+            booksList.innerHTML = '';
+            books.forEach(book => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${book.id}</td>
+                    <td>${book.title}</td>
+                    <td>${book.author}</td>
+                    <td>${book.isbn}</td>
+                    <td>${book.category}</td>
+                    <td><span class="status-badge">${book.status}</span></td>
+                    <td>
+                        <button class="action-btn edit-btn">Edit</button>
+                        <button class="action-btn delete-btn">Delete</button>
+                    </td>
+                `;
+                booksList.appendChild(row);
+            });
+        }
+
+        // Render members in the table
+        function renderMembers() {
+            membersList.innerHTML = '';
+            members.forEach(member => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${member.id}</td>
+                    <td>${member.name}</td>
+                    <td>${member.email}</td>
+                    <td>${member.phone}</td>
+                    <td>${member.type}</td>
+                    <td>${member.books}</td>
+                    <td>
+                        <button class="action-btn edit-btn">Edit</button>
+                        <button class="action-btn delete-btn">Delete</button>
+                        <button class="action-btn issue-btn">Issue Book</button>
+                    </td>
+                `;
+                membersList.appendChild(row);
+            });
+        }
+
+        // Update statistics
+        function updateStats() {
+            totalBooks.textContent = books.length;
+            totalMembers.textContent = members.length;
+        }
+
+        // Setup all event listeners
+        function setupEventListeners() {
+            // Navigation items
+            navItems.forEach(item => {
+                if (item.dataset.page) {
+                    item.addEventListener('click', () => {
+                        showPage(item.dataset.page);
+                    });
+                }
+            });
+            
+            // Logout button
+            logoutBtn.addEventListener('click', () => {
+                showPage('login');
+            });
+            
+            // Page links
+            showSignup.addEventListener('click', (e) => {
+                e.preventDefault();
+                showPage('signup');
+            });
+            
+            showLogin.addEventListener('click', (e) => {
+                e.preventDefault();
+                showPage('login');
+            });
+            
+            showHomeLinks.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    showPage('home');
+                });
+            });
+            
+            // Card buttons
+            cards.forEach(card => {
+                if (card.dataset.page) {
+                    card.addEventListener('click', () => {
+                        showPage(card.dataset.page);
+                    });
+                }
+            });
+            
+            // Form submissions
+            bookForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const title = document.getElementById('book-title').value;
+                const author = document.getElementById('book-author').value;
+                const isbn = document.getElementById('book-isbn').value;
+                const category = document.getElementById('book-category').value;
+                
+                // Add new book
+                const newBook = {
+                    id: books.length + 1,
+                    title,
+                    author,
+                    isbn,
+                    category,
+                    status: "Available"
+                };
+                
+                books.push(newBook);
+                renderBooks();
+                updateStats();
+                
+                // Reset form
+                bookForm.reset();
+                
+                // Show success message
+                alert(`"${title}" has been added to the library!`);
+            });
+            
+            memberForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const name = document.getElementById('member-name').value;
+                const email = document.getElementById('member-email').value;
+                const phone = document.getElementById('member-phone').value;
+                const type = document.getElementById('member-type').value;
+                
+                // Add new member
+                const newMember = {
+                    id: members.length + 1,
+                    name,
+                    email,
+                    phone,
+                    type,
+                    books: 0
+                };
+                
+                members.push(newMember);
+                renderMembers();
+                updateStats();
+                
+                // Reset form
+                memberForm.reset();
+                
+                // Show success message
+                alert(`${name} has been added as a new member!`);
+            });
+            
+            loginForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const username = document.getElementById('username').value;
+                const password = document.getElementById('password').value;
+                
+                // Simple validation
+                if (username && password) {
+                    showPage('home');
+                }
+            });
+            
+            signupForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const fullname = document.getElementById('fullname').value;
+                const email = document.getElementById('signup-email').value;
+                const password = document.getElementById('signup-password').value;
+                const type = document.getElementById('signup-type').value;
+                
+                // Simple validation
+                if (fullname && email && password) {
+                    alert(`Account created for ${fullname}! You can now login.`);
+                    showPage('login');
+                }
+            });
+            
+            // Issue and return book buttons
+            document.getElementById('issue-book-btn').addEventListener('click', () => {
+                alert('Book issue functionality would open a modal to select member and book');
+            });
+            
+            document.getElementById('return-book-btn').addEventListener('click', () => {
+                alert('Book return functionality would open a modal to process returns');
+            });
+        }
+
+        // Initialize the application when DOM is loaded
+        document.addEventListener('DOMContentLoaded', initApp);
+
+        // Replace all data handling functions with API calls
+async function fetchBooks() {
+    const response = await fetch('/api/books');
+    return await response.json();
+}
+
+async function addBook(book) {
+    const response = await fetch('/api/books', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(book)
+    });
+    return await response.json();
+}
+
+// Update renderBooks function
+async function renderBooks() {
+    const books = await fetchBooks();
+    booksList.innerHTML = '';
+    books.forEach(book => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${book.id}</td>
+            <td>${book.title}</td>
+            <td>${book.author}</td>
+            <td>${book.isbn}</td>
+            <td>${book.category}</td>
+            <td><span class="status-badge">${book.status}</span></td>
+            <td>
+                <button class="action-btn edit-btn">Edit</button>
+                <button class="action-btn delete-btn">Delete</button>
+            </td>
+        `;
+        booksList.appendChild(row);
+    });
+}
+
+// Add similar API integration for:
+// - Members
+// - Authentication
+// - Statistics
+    </script>
+</body>
+</html>

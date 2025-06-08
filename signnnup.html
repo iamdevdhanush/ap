@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Library Sign Up</title>
+  <link rel="stylesheet" href="signnnup.css" />
+  <style>
+    body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(135deg, #00b4d8, #0077b6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  margin: 0;
+}
+
+.signup-container {
+  background: white;
+  padding: 2rem;
+  border-radius: 15px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  width: 340px;
+  text-align: center;
+}
+
+.logo {
+  max-width: 100px;
+  margin: 0 auto 1rem;
+  display: block;
+}
+
+.signup-container h2 {
+  margin-bottom: 1.2rem;
+  color: #0077b6;
+}
+
+form {
+  text-align: left;
+}
+
+form label {
+  display: block;
+  margin-bottom: 0.3rem;
+  font-weight: 600;
+  color: #023e8a;
+}
+
+form input,
+form select {
+  width: 100%;
+  padding: 0.6rem;
+  margin-bottom: 1.2rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+form input:focus,
+form select:focus {
+  border-color: #00b4d8;
+  box-shadow: 0 0 5px rgba(0, 180, 216, 0.5);
+  outline: none;
+}
+
+button {
+  width: 100%;
+  padding: 0.7rem;
+  background: #00b4d8;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-weight: bold;
+  transition: background 0.3s;
+}
+
+button:hover {
+  background: #0077b6;
+}
+
+p {
+  margin-top: 1rem;
+  color: #03045e;
+}
+
+a {
+  color: #0077b6;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+  </style>
+</head>
+<body>
+  <div class="signup-container">
+  
+ 
+
+    <h2> Sign Up</h2>
+
+    <form action="/signup" method="POST">
+      <label for="fullname">Full Name</label>
+      <input type="text" id="fullname" name="fullname" required />
+
+      <label for="email">Email</label>
+      <input type="email" id="email" name="email" required />
+
+      <label for="password">Password</label>
+      <input type="password" id="password" name="password" required />
+
+      <label for="user-type">User Type</label>
+      <select id="user-type" name="user_type" required>
+        <option value="student">Student</option>
+        <option value="librarian">Librarian</option>
+      </select>
+
+      <button type="submit">Sign Up</button>
+    </form>
+
+    <p>Already have an account? <a href="login.html">login</a>
+                                <a href="home.html">home</a></p>
+  </div>
+</body>
+</html>
