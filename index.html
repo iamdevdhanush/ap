@@ -405,6 +405,21 @@
             color: white;
         }
 
+        .return-btn {
+            background-color: #17a2b8;
+            color: white;
+        }
+
+        .status-available {
+            color: #28a745;
+            font-weight: 600;
+        }
+
+        .status-checked-out {
+            color: #dc3545;
+            font-weight: 600;
+        }
+
         /* Footer */
         footer {
             text-align: center;
@@ -427,6 +442,103 @@
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.2);
+            width: 90%;
+            max-width: 500px;
+            padding: 30px;
+            position: relative;
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            font-size: 24px;
+            cursor: pointer;
+            color: #777;
+        }
+
+        .modal-header {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .modal-header h2 {
+            color: #1a237e;
+            font-size: 1.8rem;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn-cancel {
+            background-color: #6c757d;
+        }
+
+        .btn-cancel:hover {
+            background-color: #5a6268;
+        }
+
+        /* Toast Notification */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            padding: 15px 25px;
+            display: flex;
+            align-items: center;
+            z-index: 2000;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .toast i {
+            margin-right: 10px;
+            font-size: 20px;
+        }
+
+        .toast-success {
+            border-left: 4px solid var(--success);
+        }
+
+        .toast-error {
+            border-left: 4px solid var(--danger);
+        }
+
+        .toast-info {
+            border-left: 4px solid var(--primary);
         }
 
         /* Responsive Design */
@@ -500,7 +612,7 @@
         </header>
 
         <!-- Home Page -->
-        <div id="home-page" class="page active">
+        <div id="home-page" class="page">
             <div class="page-header">
                 <h1>Library Management System</h1>
                 <p>Manage your library resources efficiently with our comprehensive system. Track books, members, and transactions with ease.</p>
@@ -520,12 +632,12 @@
                 <div class="stat-card">
                     <i class="fas fa-exchange-alt"></i>
                     <h4>Transactions Today</h4>
-                    <div class="value">187</div>
+                    <div class="value" id="transactions-today">0</div>
                 </div>
                 <div class="stat-card">
                     <i class="fas fa-clock"></i>
                     <h4>Overdue Books</h4>
-                    <div class="value">63</div>
+                    <div class="value" id="overdue-books">0</div>
                 </div>
             </div>
 
@@ -583,9 +695,10 @@
 
             <div class="form-container">
                 <div class="form-header">
-                    <h2>Add New Book</h2>
+                    <h2 id="book-form-title">Add New Book</h2>
                 </div>
                 <form id="book-form">
+                    <input type="hidden" id="book-id">
                     <div class="form-group">
                         <label for="book-title">Book Title</label>
                         <input type="text" id="book-title" required>
@@ -609,7 +722,8 @@
                             <option value="Technology">Technology</option>
                         </select>
                     </div>
-                    <button type="submit" class="btn btn-success">Add Book</button>
+                    <button type="submit" class="btn btn-success" id="book-submit-btn">Add Book</button>
+                    <button type="button" class="btn btn-cancel" id="book-cancel-btn" style="display: none; margin-top: 10px;">Cancel</button>
                 </form>
             </div>
 
@@ -643,9 +757,10 @@
 
             <div class="form-container">
                 <div class="form-header">
-                    <h2>Add New Member</h2>
+                    <h2 id="member-form-title">Add New Member</h2>
                 </div>
                 <form id="member-form">
+                    <input type="hidden" id="member-id">
                     <div class="form-group">
                         <label for="member-name">Full Name</label>
                         <input type="text" id="member-name" required>
@@ -667,7 +782,8 @@
                             <option value="Researcher">Researcher</option>
                         </select>
                     </div>
-                    <button type="submit" class="btn btn-success">Add Member</button>
+                    <button type="submit" class="btn btn-success" id="member-submit-btn">Add Member</button>
+                    <button type="button" class="btn btn-cancel" id="member-cancel-btn" style="display: none; margin-top: 10px;">Cancel</button>
                 </form>
             </div>
 
@@ -693,7 +809,7 @@
         </div>
 
         <!-- Login Page -->
-        <div id="login-page" class="page">
+        <div id="login-page" class="page active">
             <div class="form-container">
                 <div class="form-header">
                     <h2>Login</h2>
@@ -752,21 +868,110 @@
         </div>
     </div>
 
-    <script>
-        // Initialize sample data
-        const books = [
-            { id: 1, title: "The Great Gatsby", author: "F. Scott Fitzgerald", isbn: "9780743273565", category: "Fiction", status: "Available" },
-            { id: 2, title: "To Kill a Mockingbird", author: "Harper Lee", isbn: "9780061120084", category: "Fiction", status: "Available" },
-            { id: 3, title: "1984", author: "George Orwell", isbn: "9780451524935", category: "Fiction", status: "Checked Out" },
-            { id: 4, title: "A Brief History of Time", author: "Stephen Hawking", isbn: "9780553380163", category: "Science", status: "Available" },
-        ];
+    <!-- Modal for Issue Book -->
+    <div class="modal" id="issue-book-modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <div class="modal-header">
+                <h2>Issue Book</h2>
+            </div>
+            <form id="issue-book-form">
+                <div class="form-group">
+                    <label for="issue-member">Select Member</label>
+                    <select id="issue-member" required></select>
+                </div>
+                <div class="form-group">
+                    <label for="issue-book">Select Book</label>
+                    <select id="issue-book" required></select>
+                </div>
+                <div class="form-group">
+                    <label for="issue-date">Issue Date</label>
+                    <input type="date" id="issue-date" required>
+                </div>
+                <div class="form-group">
+                    <label for="due-date">Due Date</label>
+                    <input type="date" id="due-date" required>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-cancel">Cancel</button>
+                    <button type="submit" class="btn btn-success">Issue Book</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
-        const members = [
-            { id: 1, name: "John Smith", email: "john@example.com", phone: "555-1234", type: "Student", books: 2 },
-            { id: 2, name: "Sarah Johnson", email: "sarah@example.com", phone: "555-5678", type: "Faculty", books: 1 },
-            { id: 3, name: "Michael Brown", email: "michael@example.com", phone: "555-9012", type: "Researcher", books: 3 },
-            { id: 4, name: "Emily Davis", email: "emily@example.com", phone: "555-3456", type: "Student", books: 0 },
-        ];
+    <!-- Modal for Return Book -->
+    <div class="modal" id="return-book-modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <div class="modal-header">
+                <h2>Return Book</h2>
+            </div>
+            <form id="return-book-form">
+                <div class="form-group">
+                    <label for="return-member">Select Member</label>
+                    <select id="return-member" required></select>
+                </div>
+                <div class="form-group">
+                    <label for="return-book">Select Book to Return</label>
+                    <select id="return-book" required></select>
+                </div>
+                <div class="form-group">
+                    <label for="return-date">Return Date</label>
+                    <input type="date" id="return-date" required>
+                </div>
+                <div class="form-group">
+                    <label for="fine-amount">Fine Amount ($)</label>
+                    <input type="number" id="fine-amount" step="0.01" min="0" value="0" required>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-cancel">Cancel</button>
+                    <button type="submit" class="btn btn-success">Return Book</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="toast" id="toast">
+        <i class="fas fa-check-circle"></i>
+        <span id="toast-message">Operation completed successfully!</span>
+    </div>
+
+    <script>
+        // Data storage with localStorage
+        const initializeData = () => {
+            if (!localStorage.getItem('books')) {
+                const books = [
+                    { id: 1, title: "The Great Gatsby", author: "F. Scott Fitzgerald", isbn: "9780743273565", category: "Fiction", status: "Available" },
+                    { id: 2, title: "To Kill a Mockingbird", author: "Harper Lee", isbn: "9780061120084", category: "Fiction", status: "Available" },
+                    { id: 3, title: "1984", author: "George Orwell", isbn: "9780451524935", category: "Fiction", status: "Available" },
+                    { id: 4, title: "A Brief History of Time", author: "Stephen Hawking", isbn: "9780553380163", category: "Science", status: "Available" },
+                ];
+                localStorage.setItem('books', JSON.stringify(books));
+            }
+
+            if (!localStorage.getItem('members')) {
+                const members = [
+                    { id: 1, name: "John Smith", email: "john@example.com", phone: "555-1234", type: "Student", books: 0 },
+                    { id: 2, name: "Sarah Johnson", email: "sarah@example.com", phone: "555-5678", type: "Faculty", books: 0 },
+                    { id: 3, name: "Michael Brown", email: "michael@example.com", phone: "555-9012", type: "Researcher", books: 0 },
+                    { id: 4, name: "Emily Davis", email: "emily@example.com", phone: "555-3456", type: "Student", books: 0 },
+                ];
+                localStorage.setItem('members', JSON.stringify(members));
+            }
+
+            if (!localStorage.getItem('transactions')) {
+                localStorage.setItem('transactions', JSON.stringify([]));
+            }
+
+            if (!localStorage.getItem('users')) {
+                const users = [
+                    { id: 1, name: "Admin User", email: "admin@library.com", password: "admin123", type: "librarian" }
+                ];
+                localStorage.setItem('users', JSON.stringify(users));
+            }
+        };
 
         // DOM elements
         const pages = {
@@ -791,11 +996,35 @@
         const membersList = document.getElementById('members-list');
         const totalBooks = document.getElementById('total-books');
         const totalMembers = document.getElementById('total-members');
+        const transactionsToday = document.getElementById('transactions-today');
+        const overdueBooks = document.getElementById('overdue-books');
+        const issueBookBtn = document.getElementById('issue-book-btn');
+        const returnBookBtn = document.getElementById('return-book-btn');
+        const issueBookModal = document.getElementById('issue-book-modal');
+        const returnBookModal = document.getElementById('return-book-modal');
+        const issueBookForm = document.getElementById('issue-book-form');
+        const returnBookForm = document.getElementById('return-book-form');
+        const issueMemberSelect = document.getElementById('issue-member');
+        const issueBookSelect = document.getElementById('issue-book');
+        const returnMemberSelect = document.getElementById('return-member');
+        const returnBookSelect = document.getElementById('return-book');
+        const toast = document.getElementById('toast');
+        const toastMessage = document.getElementById('toast-message');
+        const bookFormTitle = document.getElementById('book-form-title');
+        const memberFormTitle = document.getElementById('member-form-title');
+        const bookSubmitBtn = document.getElementById('book-submit-btn');
+        const memberSubmitBtn = document.getElementById('member-submit-btn');
+        const bookCancelBtn = document.getElementById('book-cancel-btn');
+        const memberCancelBtn = document.getElementById('member-cancel-btn');
+        const bookIdField = document.getElementById('book-id');
+        const memberIdField = document.getElementById('member-id');
 
         // Initialize the application
         function initApp() {
+            initializeData();
+            
             // Set active page
-            showPage('home');
+            showPage('login');
             
             // Render data
             renderBooks();
@@ -827,7 +1056,9 @@
 
         // Render books in the table
         function renderBooks() {
+            const books = JSON.parse(localStorage.getItem('books') || '[]');
             booksList.innerHTML = '';
+            
             books.forEach(book => {
                 const row = document.createElement('tr');
                 row.innerHTML = `
@@ -836,10 +1067,10 @@
                     <td>${book.author}</td>
                     <td>${book.isbn}</td>
                     <td>${book.category}</td>
-                    <td><span class="status-badge">${book.status}</span></td>
+                    <td><span class="${book.status === 'Available' ? 'status-available' : 'status-checked-out'}">${book.status}</span></td>
                     <td>
-                        <button class="action-btn edit-btn">Edit</button>
-                        <button class="action-btn delete-btn">Delete</button>
+                        <button class="action-btn edit-btn" data-id="${book.id}">Edit</button>
+                        <button class="action-btn delete-btn" data-id="${book.id}">Delete</button>
                     </td>
                 `;
                 booksList.appendChild(row);
@@ -848,7 +1079,9 @@
 
         // Render members in the table
         function renderMembers() {
+            const members = JSON.parse(localStorage.getItem('members') || '[]');
             membersList.innerHTML = '';
+            
             members.forEach(member => {
                 const row = document.createElement('tr');
                 row.innerHTML = `
@@ -859,9 +1092,9 @@
                     <td>${member.type}</td>
                     <td>${member.books}</td>
                     <td>
-                        <button class="action-btn edit-btn">Edit</button>
-                        <button class="action-btn delete-btn">Delete</button>
-                        <button class="action-btn issue-btn">Issue Book</button>
+                        <button class="action-btn edit-btn" data-id="${member.id}">Edit</button>
+                        <button class="action-btn delete-btn" data-id="${member.id}">Delete</button>
+                        <button class="action-btn issue-btn" data-id="${member.id}">Issue Book</button>
                     </td>
                 `;
                 membersList.appendChild(row);
@@ -870,8 +1103,35 @@
 
         // Update statistics
         function updateStats() {
+            const books = JSON.parse(localStorage.getItem('books') || '[]');
+            const members = JSON.parse(localStorage.getItem('members') || '[]');
+            const transactions = JSON.parse(localStorage.getItem('transactions') || '[]');
+            
             totalBooks.textContent = books.length;
             totalMembers.textContent = members.length;
+            
+            // Count today's transactions
+            const today = new Date().toISOString().split('T')[0];
+            const todayTransactions = transactions.filter(t => t.issueDate === today).length;
+            transactionsToday.textContent = todayTransactions;
+            
+            // Count overdue books
+            const overdue = transactions.filter(t => {
+                const dueDate = new Date(t.dueDate);
+                const today = new Date();
+                return t.returnDate === null && dueDate < today;
+            }).length;
+            overdueBooks.textContent = overdue;
+        }
+
+        // Show toast notification
+        function showToast(message, type = 'success') {
+            toastMessage.textContent = message;
+            toast.className = `toast toast-${type} show`;
+            
+            setTimeout(() => {
+                toast.className = 'toast';
+            }, 3000);
         }
 
         // Setup all event listeners
@@ -920,58 +1180,90 @@
             // Form submissions
             bookForm.addEventListener('submit', (e) => {
                 e.preventDefault();
+                const id = bookIdField.value;
                 const title = document.getElementById('book-title').value;
                 const author = document.getElementById('book-author').value;
                 const isbn = document.getElementById('book-isbn').value;
                 const category = document.getElementById('book-category').value;
                 
-                // Add new book
-                const newBook = {
-                    id: books.length + 1,
-                    title,
-                    author,
-                    isbn,
-                    category,
-                    status: "Available"
-                };
+                let books = JSON.parse(localStorage.getItem('books') || []);
                 
-                books.push(newBook);
+                if (id) {
+                    // Update existing book
+                    books = books.map(book => 
+                        book.id === parseInt(id) ? {...book, title, author, isbn, category} : book
+                    );
+                    showToast('Book updated successfully!');
+                } else {
+                    // Add new book
+                    const newId = books.length > 0 ? Math.max(...books.map(b => b.id)) + 1 : 1;
+                    const newBook = {
+                        id: newId,
+                        title,
+                        author,
+                        isbn,
+                        category,
+                        status: "Available"
+                    };
+                    
+                    books.push(newBook);
+                    showToast(`"${title}" has been added to the library!`);
+                }
+                
+                localStorage.setItem('books', JSON.stringify(books));
                 renderBooks();
                 updateStats();
                 
                 // Reset form
                 bookForm.reset();
-                
-                // Show success message
-                alert(`"${title}" has been added to the library!`);
+                bookIdField.value = '';
+                bookSubmitBtn.textContent = 'Add Book';
+                bookFormTitle.textContent = 'Add New Book';
+                bookCancelBtn.style.display = 'none';
             });
             
             memberForm.addEventListener('submit', (e) => {
                 e.preventDefault();
+                const id = memberIdField.value;
                 const name = document.getElementById('member-name').value;
                 const email = document.getElementById('member-email').value;
                 const phone = document.getElementById('member-phone').value;
                 const type = document.getElementById('member-type').value;
                 
-                // Add new member
-                const newMember = {
-                    id: members.length + 1,
-                    name,
-                    email,
-                    phone,
-                    type,
-                    books: 0
-                };
+                let members = JSON.parse(localStorage.getItem('members') || []);
                 
-                members.push(newMember);
+                if (id) {
+                    // Update existing member
+                    members = members.map(member => 
+                        member.id === parseInt(id) ? {...member, name, email, phone, type} : member
+                    );
+                    showToast('Member updated successfully!');
+                } else {
+                    // Add new member
+                    const newId = members.length > 0 ? Math.max(...members.map(m => m.id)) + 1 : 1;
+                    const newMember = {
+                        id: newId,
+                        name,
+                        email,
+                        phone,
+                        type,
+                        books: 0
+                    };
+                    
+                    members.push(newMember);
+                    showToast(`${name} has been added as a new member!`);
+                }
+                
+                localStorage.setItem('members', JSON.stringify(members));
                 renderMembers();
                 updateStats();
                 
                 // Reset form
                 memberForm.reset();
-                
-                // Show success message
-                alert(`${name} has been added as a new member!`);
+                memberIdField.value = '';
+                memberSubmitBtn.textContent = 'Add Member';
+                memberFormTitle.textContent = 'Add New Member';
+                memberCancelBtn.style.display = 'none';
             });
             
             loginForm.addEventListener('submit', (e) => {
@@ -979,9 +1271,13 @@
                 const username = document.getElementById('username').value;
                 const password = document.getElementById('password').value;
                 
-                // Simple validation
-                if (username && password) {
+                const users = JSON.parse(localStorage.getItem('users') || '[]');
+                const user = users.find(u => u.email === username && u.password === password);
+                
+                if (user) {
                     showPage('home');
+                } else {
+                    showToast('Invalid username or password', 'error');
                 }
             });
             
@@ -992,67 +1288,351 @@
                 const password = document.getElementById('signup-password').value;
                 const type = document.getElementById('signup-type').value;
                 
-                // Simple validation
-                if (fullname && email && password) {
-                    alert(`Account created for ${fullname}! You can now login.`);
-                    showPage('login');
+                const users = JSON.parse(localStorage.getItem('users') || '[]');
+                
+                // Check if user already exists
+                if (users.some(u => u.email === email)) {
+                    showToast('User with this email already exists', 'error');
+                    return;
                 }
+                
+                // Add new user
+                const newId = users.length > 0 ? Math.max(...users.map(u => u.id)) + 1 : 1;
+                const newUser = {
+                    id: newId,
+                    name: fullname,
+                    email,
+                    password,
+                    type
+                };
+                
+                users.push(newUser);
+                localStorage.setItem('users', JSON.stringify(users));
+                
+                showToast('Account created successfully! You can now login.', 'info');
+                signupForm.reset();
+                showPage('login');
             });
             
             // Issue and return book buttons
-            document.getElementById('issue-book-btn').addEventListener('click', () => {
-                alert('Book issue functionality would open a modal to select member and book');
+            issueBookBtn.addEventListener('click', () => {
+                // Populate member dropdown
+                issueMemberSelect.innerHTML = '';
+                const members = JSON.parse(localStorage.getItem('members') || '[]');
+                members.forEach(member => {
+                    const option = document.createElement('option');
+                    option.value = member.id;
+                    option.textContent = `${member.name} (${member.type})`;
+                    issueMemberSelect.appendChild(option);
+                });
+                
+                // Populate book dropdown with available books
+                issueBookSelect.innerHTML = '';
+                const books = JSON.parse(localStorage.getItem('books') || '[]');
+                books.filter(book => book.status === 'Available').forEach(book => {
+                    const option = document.createElement('option');
+                    option.value = book.id;
+                    option.textContent = `${book.title} by ${book.author}`;
+                    issueBookSelect.appendChild(option);
+                });
+                
+                // Set dates
+                const today = new Date();
+                document.getElementById('issue-date').value = today.toISOString().split('T')[0];
+                
+                const dueDate = new Date();
+                dueDate.setDate(today.getDate() + 14); // 14 days from now
+                document.getElementById('due-date').value = dueDate.toISOString().split('T')[0];
+                
+                issueBookModal.style.display = 'flex';
             });
             
-            document.getElementById('return-book-btn').addEventListener('click', () => {
-                alert('Book return functionality would open a modal to process returns');
+            returnBookBtn.addEventListener('click', () => {
+                // Populate member dropdown
+                returnMemberSelect.innerHTML = '';
+                const members = JSON.parse(localStorage.getItem('members') || '[]');
+                members.forEach(member => {
+                    const option = document.createElement('option');
+                    option.value = member.id;
+                    option.textContent = `${member.name} (${member.type})`;
+                    returnMemberSelect.appendChild(option);
+                });
+                
+                // Set today's date for return
+                const today = new Date();
+                document.getElementById('return-date').value = today.toISOString().split('T')[0];
+                
+                returnBookModal.style.display = 'flex';
             });
+            
+            // Handle book issue form submission
+            issueBookForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const memberId = parseInt(issueMemberSelect.value);
+                const bookId = parseInt(issueBookSelect.value);
+                const issueDate = document.getElementById('issue-date').value;
+                const dueDate = document.getElementById('due-date').value;
+                
+                // Update book status
+                let books = JSON.parse(localStorage.getItem('books') || '[]');
+                books = books.map(book => 
+                    book.id === bookId ? {...book, status: "Checked Out"} : book
+                );
+                localStorage.setItem('books', JSON.stringify(books));
+                
+                // Update member book count
+                let members = JSON.parse(localStorage.getItem('members') || '[]');
+                members = members.map(member => 
+                    member.id === memberId ? {...member, books: member.books + 1} : member
+                );
+                localStorage.setItem('members', JSON.stringify(members));
+                
+                // Add transaction
+                const transactions = JSON.parse(localStorage.getItem('transactions') || '[]');
+                const transactionId = transactions.length > 0 ? Math.max(...transactions.map(t => t.id)) + 1 : 1;
+                
+                transactions.push({
+                    id: transactionId,
+                    bookId,
+                    memberId,
+                    issueDate,
+                    dueDate,
+                    returnDate: null,
+                    fine: 0
+                });
+                localStorage.setItem('transactions', JSON.stringify(transactions));
+                
+                // Close modal and update UI
+                issueBookModal.style.display = 'none';
+                renderBooks();
+                renderMembers();
+                updateStats();
+                showToast('Book issued successfully!');
+            });
+            
+            // Handle book return form submission
+            returnBookForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const memberId = parseInt(returnMemberSelect.value);
+                const bookId = parseInt(returnBookSelect.value);
+                const returnDate = document.getElementById('return-date').value;
+                const fineAmount = parseFloat(document.getElementById('fine-amount').value) || 0;
+                
+                // Update book status
+                let books = JSON.parse(localStorage.getItem('books') || '[]');
+                books = books.map(book => 
+                    book.id === bookId ? {...book, status: "Available"} : book
+                );
+                localStorage.setItem('books', JSON.stringify(books));
+                
+                // Update member book count
+                let members = JSON.parse(localStorage.getItem('members') || '[]');
+                members = members.map(member => 
+                    member.id === memberId ? {...member, books: member.books - 1} : member
+                );
+                localStorage.setItem('members', JSON.stringify(members));
+                
+                // Update transaction
+                let transactions = JSON.parse(localStorage.getItem('transactions') || '[]');
+                transactions = transactions.map(transaction => {
+                    if (transaction.bookId === bookId && transaction.memberId === memberId && !transaction.returnDate) {
+                        return {...transaction, returnDate, fine: fineAmount};
+                    }
+                    return transaction;
+                });
+                localStorage.setItem('transactions', JSON.stringify(transactions));
+                
+                // Close modal and update UI
+                returnBookModal.style.display = 'none';
+                renderBooks();
+                renderMembers();
+                updateStats();
+                showToast('Book returned successfully!');
+            });
+            
+            // Close modals when clicking X
+            document.querySelectorAll('.close-modal').forEach(closeBtn => {
+                closeBtn.addEventListener('click', () => {
+                    issueBookModal.style.display = 'none';
+                    returnBookModal.style.display = 'none';
+                });
+            });
+            
+            // Close modals when clicking cancel buttons
+            document.querySelectorAll('.btn-cancel').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    issueBookModal.style.display = 'none';
+                    returnBookModal.style.display = 'none';
+                });
+            });
+            
+            // Close modals when clicking outside
+            window.addEventListener('click', (e) => {
+                if (e.target === issueBookModal) issueBookModal.style.display = 'none';
+                if (e.target === returnBookModal) returnBookModal.style.display = 'none';
+            });
+            
+            // Handle book edit and delete
+            booksList.addEventListener('click', (e) => {
+                const target = e.target;
+                if (target.classList.contains('edit-btn')) {
+                    const bookId = parseInt(target.dataset.id);
+                    editBook(bookId);
+                } else if (target.classList.contains('delete-btn')) {
+                    const bookId = parseInt(target.dataset.id);
+                    deleteBook(bookId);
+                }
+            });
+            
+            // Handle member edit and delete
+            membersList.addEventListener('click', (e) => {
+                const target = e.target;
+                if (target.classList.contains('edit-btn')) {
+                    const memberId = parseInt(target.dataset.id);
+                    editMember(memberId);
+                } else if (target.classList.contains('delete-btn')) {
+                    const memberId = parseInt(target.dataset.id);
+                    deleteMember(memberId);
+                } else if (target.classList.contains('issue-btn')) {
+                    const memberId = parseInt(target.dataset.id);
+                    issueBookToMember(memberId);
+                }
+            });
+            
+            // Cancel buttons
+            bookCancelBtn.addEventListener('click', () => {
+                bookForm.reset();
+                bookIdField.value = '';
+                bookSubmitBtn.textContent = 'Add Book';
+                bookFormTitle.textContent = 'Add New Book';
+                bookCancelBtn.style.display = 'none';
+            });
+            
+            memberCancelBtn.addEventListener('click', () => {
+                memberForm.reset();
+                memberIdField.value = '';
+                memberSubmitBtn.textContent = 'Add Member';
+                memberFormTitle.textContent = 'Add New Member';
+                memberCancelBtn.style.display = 'none';
+            });
+            
+            // When member is selected in return modal, update books dropdown
+            returnMemberSelect.addEventListener('change', () => {
+                const memberId = parseInt(returnMemberSelect.value);
+                const books = JSON.parse(localStorage.getItem('books') || '[]');
+                const transactions = JSON.parse(localStorage.getItem('transactions') || '[]');
+                
+                // Get books checked out by this member
+                const checkedOutBooks = transactions
+                    .filter(t => t.memberId === memberId && !t.returnDate)
+                    .map(t => books.find(b => b.id === t.bookId));
+                
+                returnBookSelect.innerHTML = '';
+                checkedOutBooks.forEach(book => {
+                    const option = document.createElement('option');
+                    option.value = book.id;
+                    option.textContent = `${book.title} by ${book.author}`;
+                    returnBookSelect.appendChild(option);
+                });
+            });
+        }
+
+        // Edit book function
+        function editBook(bookId) {
+            const books = JSON.parse(localStorage.getItem('books') || '[]');
+            const book = books.find(b => b.id === bookId);
+            
+            if (book) {
+                document.getElementById('book-title').value = book.title;
+                document.getElementById('book-author').value = book.author;
+                document.getElementById('book-isbn').value = book.isbn;
+                document.getElementById('book-category').value = book.category;
+                bookIdField.value = book.id;
+                
+                bookSubmitBtn.textContent = 'Update Book';
+                bookFormTitle.textContent = 'Edit Book';
+                bookCancelBtn.style.display = 'block';
+                
+                // Scroll to form
+                document.getElementById('book-form').scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+
+        // Delete book function
+        function deleteBook(bookId) {
+            if (confirm('Are you sure you want to delete this book?')) {
+                let books = JSON.parse(localStorage.getItem('books') || '[]');
+                books = books.filter(book => book.id !== bookId);
+                localStorage.setItem('books', JSON.stringify(books));
+                
+                renderBooks();
+                updateStats();
+                showToast('Book deleted successfully!');
+            }
+        }
+
+        // Edit member function
+        function editMember(memberId) {
+            const members = JSON.parse(localStorage.getItem('members') || '[]');
+            const member = members.find(m => m.id === memberId);
+            
+            if (member) {
+                document.getElementById('member-name').value = member.name;
+                document.getElementById('member-email').value = member.email;
+                document.getElementById('member-phone').value = member.phone;
+                document.getElementById('member-type').value = member.type;
+                memberIdField.value = member.id;
+                
+                memberSubmitBtn.textContent = 'Update Member';
+                memberFormTitle.textContent = 'Edit Member';
+                memberCancelBtn.style.display = 'block';
+                
+                // Scroll to form
+                document.getElementById('member-form').scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+
+        // Delete member function
+        function deleteMember(memberId) {
+            if (confirm('Are you sure you want to delete this member?')) {
+                let members = JSON.parse(localStorage.getItem('members') || '[]');
+                members = members.filter(member => member.id !== memberId);
+                localStorage.setItem('members', JSON.stringify(members));
+                
+                renderMembers();
+                updateStats();
+                showToast('Member deleted successfully!');
+            }
+        }
+
+        // Issue book to a specific member
+        function issueBookToMember(memberId) {
+            // Set the member in the issue modal
+            issueMemberSelect.value = memberId;
+            
+            // Populate book dropdown with available books
+            issueBookSelect.innerHTML = '';
+            const books = JSON.parse(localStorage.getItem('books') || '[]');
+            books.filter(book => book.status === 'Available').forEach(book => {
+                const option = document.createElement('option');
+                option.value = book.id;
+                option.textContent = `${book.title} by ${book.author}`;
+                issueBookSelect.appendChild(option);
+            });
+            
+            // Set dates
+            const today = new Date();
+            document.getElementById('issue-date').value = today.toISOString().split('T')[0];
+            
+            const dueDate = new Date();
+            dueDate.setDate(today.getDate() + 14); // 14 days from now
+            document.getElementById('due-date').value = dueDate.toISOString().split('T')[0];
+            
+            issueBookModal.style.display = 'flex';
         }
 
         // Initialize the application when DOM is loaded
         document.addEventListener('DOMContentLoaded', initApp);
-
-        // Replace all data handling functions with API calls
-async function fetchBooks() {
-    const response = await fetch('/api/books');
-    return await response.json();
-}
-
-async function addBook(book) {
-    const response = await fetch('/api/books', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify(book)
-    });
-    return await response.json();
-}
-
-// Update renderBooks function
-async function renderBooks() {
-    const books = await fetchBooks();
-    booksList.innerHTML = '';
-    books.forEach(book => {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td>${book.id}</td>
-            <td>${book.title}</td>
-            <td>${book.author}</td>
-            <td>${book.isbn}</td>
-            <td>${book.category}</td>
-            <td><span class="status-badge">${book.status}</span></td>
-            <td>
-                <button class="action-btn edit-btn">Edit</button>
-                <button class="action-btn delete-btn">Delete</button>
-            </td>
-        `;
-        booksList.appendChild(row);
-    });
-}
-
-// Add similar API integration for:
-// - Members
-// - Authentication
-// - Statistics
     </script>
 </body>
 </html>
