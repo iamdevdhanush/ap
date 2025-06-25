@@ -595,6 +595,63 @@
                 padding: 20px;
             }
         }
+        @media (max-width: 768px) {
+    .navbar nav ul {
+        display: none;
+        flex-direction: column;
+        width: 100%;
+        position: absolute;
+        top: 60px;
+        left: 0;
+        background: linear-gradient(to right, var(--primary), var(--secondary));
+        z-index: 99;
+    }
+    
+    .navbar nav ul.mobile-visible {
+        display: flex;
+    }
+    
+    .nav-item {
+        width: 100%;
+        justify-content: center;
+        padding: 15px;
+    }
+    
+    .mobile-menu-btn {
+        display: block;
+        position: absolute;
+        right: 20px;
+        top: 15px;
+        color: white;
+        font-size: 24px;
+        cursor: pointer;
+    }
+    
+    .table-container {
+        overflow-x: auto;
+    }
+    
+    .actions-cell {
+        white-space: nowrap;
+    }
+}
+
+@media (max-width: 480px) {
+    .page-header h1 {
+        font-size: 1.8rem;
+    }
+    
+    .card {
+        height: auto;
+        padding: 20px;
+    }
+    
+    .action-btn {
+        margin: 2px;
+        padding: 6px 8px;
+        font-size: 0.8rem;
+    }
+}
     </style>
 </head>
 <body>
@@ -939,9 +996,15 @@
     </div>
 
     <script>
-        // Data storage with localStorage
-        const initializeData = () => {
-            if (!localStorage.getItem('books')) {
+// Library Management System - Complete JS with Mobile Enhancements
+
+// Data Model
+const LibraryModel = {
+    // Initialize all data with proper error handling
+    initializeData: function() {
+        try {
+            // Initialize books if not exists
+            if (!localStorage.getItem('books') || JSON.parse(localStorage.getItem('books')).length === 0) {
                 const books = [
                     { id: 1, title: "The Great Gatsby", author: "F. Scott Fitzgerald", isbn: "9780743273565", category: "Fiction", status: "Available" },
                     { id: 2, title: "To Kill a Mockingbird", author: "Harper Lee", isbn: "9780061120084", category: "Fiction", status: "Available" },
@@ -951,7 +1014,8 @@
                 localStorage.setItem('books', JSON.stringify(books));
             }
 
-            if (!localStorage.getItem('members')) {
+            // Initialize members if not exists
+            if (!localStorage.getItem('members') || JSON.parse(localStorage.getItem('members')).length === 0) {
                 const members = [
                     { id: 1, name: "John Smith", email: "john@example.com", phone: "555-1234", type: "Student", books: 0 },
                     { id: 2, name: "Sarah Johnson", email: "sarah@example.com", phone: "555-5678", type: "Faculty", books: 0 },
@@ -961,159 +1025,240 @@
                 localStorage.setItem('members', JSON.stringify(members));
             }
 
+            // Initialize transactions if not exists
             if (!localStorage.getItem('transactions')) {
                 localStorage.setItem('transactions', JSON.stringify([]));
             }
 
-            if (!localStorage.getItem('users')) {
+            // Initialize users with a default admin if not exists
+            if (!localStorage.getItem('users') || JSON.parse(localStorage.getItem('users')).length === 0) {
                 const users = [
-                    { id: 1, name: "Admin User", email: "admin@library.com", password: "admin123", type: "librarian" }
+                    { id: 1, name: "Admin User", email: "admin@library.com", password: "admin123", type: "librarian" },
+                    { id: 2, name: "Test User", email: "user@library.com", password: "user123", type: "student" }
                 ];
                 localStorage.setItem('users', JSON.stringify(users));
             }
-        };
-
-        // DOM elements
-        const pages = {
-            home: document.getElementById('home-page'),
-            books: document.getElementById('books-page'),
-            members: document.getElementById('members-page'),
-            login: document.getElementById('login-page'),
-            signup: document.getElementById('signup-page')
-        };
-
-        const navItems = document.querySelectorAll('.nav-item');
-        const logoutBtn = document.getElementById('logout-btn');
-        const showSignup = document.getElementById('show-signup');
-        const showLogin = document.getElementById('show-login');
-        const showHomeLinks = document.querySelectorAll('[id^="show-home"]');
-        const cards = document.querySelectorAll('.card');
-        const bookForm = document.getElementById('book-form');
-        const memberForm = document.getElementById('member-form');
-        const loginForm = document.getElementById('login-form');
-        const signupForm = document.getElementById('signup-form');
-        const booksList = document.getElementById('books-list');
-        const membersList = document.getElementById('members-list');
-        const totalBooks = document.getElementById('total-books');
-        const totalMembers = document.getElementById('total-members');
-        const transactionsToday = document.getElementById('transactions-today');
-        const overdueBooks = document.getElementById('overdue-books');
-        const issueBookBtn = document.getElementById('issue-book-btn');
-        const returnBookBtn = document.getElementById('return-book-btn');
-        const issueBookModal = document.getElementById('issue-book-modal');
-        const returnBookModal = document.getElementById('return-book-modal');
-        const issueBookForm = document.getElementById('issue-book-form');
-        const returnBookForm = document.getElementById('return-book-form');
-        const issueMemberSelect = document.getElementById('issue-member');
-        const issueBookSelect = document.getElementById('issue-book');
-        const returnMemberSelect = document.getElementById('return-member');
-        const returnBookSelect = document.getElementById('return-book');
-        const toast = document.getElementById('toast');
-        const toastMessage = document.getElementById('toast-message');
-        const bookFormTitle = document.getElementById('book-form-title');
-        const memberFormTitle = document.getElementById('member-form-title');
-        const bookSubmitBtn = document.getElementById('book-submit-btn');
-        const memberSubmitBtn = document.getElementById('member-submit-btn');
-        const bookCancelBtn = document.getElementById('book-cancel-btn');
-        const memberCancelBtn = document.getElementById('member-cancel-btn');
-        const bookIdField = document.getElementById('book-id');
-        const memberIdField = document.getElementById('member-id');
-
-        // Initialize the application
-        function initApp() {
-            initializeData();
-            
-            // Set active page
-            showPage('login');
-            
-            // Render data
-            renderBooks();
-            renderMembers();
-            updateStats();
-            
-            // Add event listeners
-            setupEventListeners();
+        } catch (e) {
+            console.error("Data initialization error:", e);
+            // Clear corrupt data and retry
+            localStorage.clear();
+            this.initializeData();
         }
+    },
 
-        // Show the selected page
-        function showPage(pageName) {
-            // Hide all pages
-            Object.values(pages).forEach(page => {
-                page.classList.remove('active');
+    // Get all books
+    getBooks: function() {
+        return JSON.parse(localStorage.getItem('books')) || [];
+    },
+
+    // Get all members
+    getMembers: function() {
+        return JSON.parse(localStorage.getItem('members')) || [];
+    },
+
+    // Get all transactions
+    getTransactions: function() {
+        return JSON.parse(localStorage.getItem('transactions')) || [];
+    },
+
+    // Get all users
+    getUsers: function() {
+        return JSON.parse(localStorage.getItem('users')) || [];
+    },
+
+    // Add or update a book
+    saveBook: function(book) {
+        try {
+            let books = this.getBooks();
+            if (book.id) {
+                // Update existing book
+                books = books.map(b => b.id === book.id ? book : b);
+            } else {
+                // Add new book
+                const newId = books.length > 0 ? Math.max(...books.map(b => b.id)) + 1 : 1;
+                book.id = newId;
+                book.status = book.status || "Available";
+                books.push(book);
+            }
+            localStorage.setItem('books', JSON.stringify(books));
+            return true;
+        } catch (e) {
+            console.error("Error saving book:", e);
+            return false;
+        }
+    },
+
+    // Delete a book
+    deleteBook: function(bookId) {
+        try {
+            let books = this.getBooks();
+            books = books.filter(book => book.id !== bookId);
+            localStorage.setItem('books', JSON.stringify(books));
+            return true;
+        } catch (e) {
+            console.error("Error deleting book:", e);
+            return false;
+        }
+    },
+
+    // Add or update a member
+    saveMember: function(member) {
+        try {
+            let members = this.getMembers();
+            if (member.id) {
+                // Update existing member
+                members = members.map(m => m.id === member.id ? member : m);
+            } else {
+                // Add new member
+                const newId = members.length > 0 ? Math.max(...members.map(m => m.id)) + 1 : 1;
+                member.id = newId;
+                member.books = member.books || 0;
+                members.push(member);
+            }
+            localStorage.setItem('members', JSON.stringify(members));
+            return true;
+        } catch (e) {
+            console.error("Error saving member:", e);
+            return false;
+        }
+    },
+
+    // Delete a member
+    deleteMember: function(memberId) {
+        try {
+            let members = this.getMembers();
+            members = members.filter(member => member.id !== memberId);
+            localStorage.setItem('members', JSON.stringify(members));
+            return true;
+        } catch (e) {
+            console.error("Error deleting member:", e);
+            return false;
+        }
+    },
+
+    // Issue a book
+    issueBook: function(bookId, memberId, issueDate, dueDate) {
+        try {
+            // Update book status
+            let books = this.getBooks();
+            books = books.map(book => 
+                book.id === bookId ? {...book, status: "Checked Out"} : book
+            );
+            localStorage.setItem('books', JSON.stringify(books));
+
+            // Update member's book count
+            let members = this.getMembers();
+            members = members.map(member => 
+                member.id === memberId ? {...member, books: member.books + 1} : member
+            );
+            localStorage.setItem('members', JSON.stringify(members));
+
+            // Create transaction
+            let transactions = this.getTransactions();
+            const transactionId = transactions.length > 0 ? Math.max(...transactions.map(t => t.id)) + 1 : 1;
+            
+            transactions.push({
+                id: transactionId,
+                bookId,
+                memberId,
+                issueDate,
+                dueDate,
+                returnDate: null,
+                fine: 0
             });
-            
-            // Show the selected page
-            pages[pageName].classList.add('active');
-            
-            // Update active nav item
-            navItems.forEach(item => {
-                item.classList.remove('active');
-                if (item.dataset.page === pageName) {
-                    item.classList.add('active');
+            localStorage.setItem('transactions', JSON.stringify(transactions));
+
+            return true;
+        } catch (e) {
+            console.error("Error issuing book:", e);
+            return false;
+        }
+    },
+
+    // Return a book
+    returnBook: function(bookId, memberId, returnDate, fineAmount) {
+        try {
+            // Update book status
+            let books = this.getBooks();
+            books = books.map(book => 
+                book.id === bookId ? {...book, status: "Available"} : book
+            );
+            localStorage.setItem('books', JSON.stringify(books));
+
+            // Update member's book count
+            let members = this.getMembers();
+            members = members.map(member => 
+                member.id === memberId ? {...member, books: member.books - 1} : member
+            );
+            localStorage.setItem('members', JSON.stringify(members));
+
+            // Update transaction
+            let transactions = this.getTransactions();
+            transactions = transactions.map(transaction => {
+                if (transaction.bookId === bookId && transaction.memberId === memberId && !transaction.returnDate) {
+                    return {...transaction, returnDate, fine: fineAmount};
                 }
+                return transaction;
             });
-        }
+            localStorage.setItem('transactions', JSON.stringify(transactions));
 
-        // Render books in the table
-        function renderBooks() {
-            const books = JSON.parse(localStorage.getItem('books') || '[]');
-            booksList.innerHTML = '';
-            
-            books.forEach(book => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${book.id}</td>
-                    <td>${book.title}</td>
-                    <td>${book.author}</td>
-                    <td>${book.isbn}</td>
-                    <td>${book.category}</td>
-                    <td><span class="${book.status === 'Available' ? 'status-available' : 'status-checked-out'}">${book.status}</span></td>
-                    <td>
-                        <button class="action-btn edit-btn" data-id="${book.id}">Edit</button>
-                        <button class="action-btn delete-btn" data-id="${book.id}">Delete</button>
-                    </td>
-                `;
-                booksList.appendChild(row);
-            });
+            return true;
+        } catch (e) {
+            console.error("Error returning book:", e);
+            return false;
         }
+    },
 
-        // Render members in the table
-        function renderMembers() {
-            const members = JSON.parse(localStorage.getItem('members') || '[]');
-            membersList.innerHTML = '';
+    // Register a new user
+    registerUser: function(user) {
+        try {
+            let users = this.getUsers();
             
-            members.forEach(member => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${member.id}</td>
-                    <td>${member.name}</td>
-                    <td>${member.email}</td>
-                    <td>${member.phone}</td>
-                    <td>${member.type}</td>
-                    <td>${member.books}</td>
-                    <td>
-                        <button class="action-btn edit-btn" data-id="${member.id}">Edit</button>
-                        <button class="action-btn delete-btn" data-id="${member.id}">Delete</button>
-                        <button class="action-btn issue-btn" data-id="${member.id}">Issue Book</button>
-                    </td>
-                `;
-                membersList.appendChild(row);
-            });
+            // Check if user already exists
+            if (users.some(u => u.email === user.email)) {
+                return { success: false, message: "User with this email already exists" };
+            }
+            
+            // Add new user
+            const newId = users.length > 0 ? Math.max(...users.map(u => u.id)) + 1 : 1;
+            user.id = newId;
+            users.push(user);
+            localStorage.setItem('users', JSON.stringify(users));
+            
+            return { success: true, message: "User registered successfully" };
+        } catch (e) {
+            console.error("Error registering user:", e);
+            return { success: false, message: "Registration failed" };
         }
+    },
 
-        // Update statistics
-        function updateStats() {
-            const books = JSON.parse(localStorage.getItem('books') || '[]');
-            const members = JSON.parse(localStorage.getItem('members') || '[]');
-            const transactions = JSON.parse(localStorage.getItem('transactions') || '[]');
+    // Authenticate user
+    authenticateUser: function(email, password) {
+        try {
+            const users = this.getUsers();
+            const user = users.find(u => u.email === email && u.password === password);
             
-            totalBooks.textContent = books.length;
-            totalMembers.textContent = members.length;
+            if (user) {
+                return { success: true, user };
+            } else {
+                return { success: false, message: "Invalid email or password" };
+            }
+        } catch (e) {
+            console.error("Authentication error:", e);
+            return { success: false, message: "Authentication failed" };
+        }
+    },
+
+    // Get stats for dashboard
+    getStats: function() {
+        try {
+            const books = this.getBooks();
+            const members = this.getMembers();
+            const transactions = this.getTransactions();
             
             // Count today's transactions
             const today = new Date().toISOString().split('T')[0];
             const todayTransactions = transactions.filter(t => t.issueDate === today).length;
-            transactionsToday.textContent = todayTransactions;
             
             // Count overdue books
             const overdue = transactions.filter(t => {
@@ -1121,518 +1266,765 @@
                 const today = new Date();
                 return t.returnDate === null && dueDate < today;
             }).length;
-            overdueBooks.textContent = overdue;
+            
+            return {
+                totalBooks: books.length,
+                totalMembers: members.length,
+                transactionsToday: todayTransactions,
+                overdueBooks: overdue
+            };
+        } catch (e) {
+            console.error("Error getting stats:", e);
+            return {
+                totalBooks: 0,
+                totalMembers: 0,
+                transactionsToday: 0,
+                overdueBooks: 0
+            };
+        }
+    },
+
+    // Get books checked out by a member
+    getCheckedOutBooks: function(memberId) {
+        try {
+            const books = this.getBooks();
+            const transactions = this.getTransactions();
+            
+            return transactions
+                .filter(t => t.memberId === memberId && !t.returnDate)
+                .map(t => books.find(b => b.id === t.bookId))
+                .filter(book => book); // Remove undefined entries
+        } catch (e) {
+            console.error("Error getting checked out books:", e);
+            return [];
+        }
+    },
+
+    // Get available books (not checked out)
+    getAvailableBooks: function() {
+        try {
+            const books = this.getBooks();
+            return books.filter(book => book.status === "Available");
+        } catch (e) {
+            console.error("Error getting available books:", e);
+            return [];
+        }
+    }
+};
+
+// UI Controller
+const LibraryController = {
+    // Initialize the application
+    init: function() {
+        this.cacheDOM();
+        this.bindEvents();
+        LibraryModel.initializeData();
+        this.showPage('login');
+        this.updateStats();
+    },
+
+    // Cache DOM elements
+    cacheDOM: function() {
+        // Pages
+        this.pages = {
+            home: document.getElementById('home-page'),
+            books: document.getElementById('books-page'),
+            members: document.getElementById('members-page'),
+            login: document.getElementById('login-page'),
+            signup: document.getElementById('signup-page')
+        };
+
+        // Navigation
+        this.navItems = document.querySelectorAll('.nav-item');
+        this.logoutBtn = document.getElementById('logout-btn');
+
+        // Forms
+        this.bookForm = document.getElementById('book-form');
+        this.memberForm = document.getElementById('member-form');
+        this.loginForm = document.getElementById('login-form');
+        this.signupForm = document.getElementById('signup-form');
+        this.issueBookForm = document.getElementById('issue-book-form');
+        this.returnBookForm = document.getElementById('return-book-form');
+
+        // Form elements
+        this.bookIdField = document.getElementById('book-id');
+        this.memberIdField = document.getElementById('member-id');
+        this.bookFormTitle = document.getElementById('book-form-title');
+        this.memberFormTitle = document.getElementById('member-form-title');
+        this.bookSubmitBtn = document.getElementById('book-submit-btn');
+        this.memberSubmitBtn = document.getElementById('member-submit-btn');
+        this.bookCancelBtn = document.getElementById('book-cancel-btn');
+        this.memberCancelBtn = document.getElementById('member-cancel-btn');
+
+        // Tables
+        this.booksList = document.getElementById('books-list');
+        this.membersList = document.getElementById('members-list');
+
+        // Stats
+        this.totalBooks = document.getElementById('total-books');
+        this.totalMembers = document.getElementById('total-members');
+        this.transactionsToday = document.getElementById('transactions-today');
+        this.overdueBooks = document.getElementById('overdue-books');
+
+        // Modals
+        this.issueBookModal = document.getElementById('issue-book-modal');
+        this.returnBookModal = document.getElementById('return-book-modal');
+        this.issueMemberSelect = document.getElementById('issue-member');
+        this.issueBookSelect = document.getElementById('issue-book');
+        this.returnMemberSelect = document.getElementById('return-member');
+        this.returnBookSelect = document.getElementById('return-book');
+
+        // Toast
+        this.toast = document.getElementById('toast');
+        this.toastMessage = document.getElementById('toast-message');
+
+        // Links
+        this.showSignup = document.getElementById('show-signup');
+        this.showLogin = document.getElementById('show-login');
+        this.showHomeLinks = document.querySelectorAll('[id^="show-home"]');
+
+        // Cards
+        this.cards = document.querySelectorAll('.card');
+        this.issueBookBtn = document.getElementById('issue-book-btn');
+        this.returnBookBtn = document.getElementById('return-book-btn');
+    },
+
+    // Bind event listeners
+    bindEvents: function() {
+        // Navigation
+        this.navItems.forEach(item => {
+            if (item.dataset.page) {
+                item.addEventListener('click', () => {
+                    this.showPage(item.dataset.page);
+                });
+            }
+        });
+
+        // Logout
+        this.logoutBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            this.showPage('login');
+            this.showToast('You have been logged out', 'info');
+            sessionStorage.removeItem('currentUser');
+        });
+
+        // Page links
+        this.showSignup.addEventListener('click', (e) => {
+            e.preventDefault();
+            this.showPage('signup');
+        });
+
+        this.showLogin.addEventListener('click', (e) => {
+            e.preventDefault();
+            this.showPage('login');
+        });
+
+        this.showHomeLinks.forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.showPage('home');
+            });
+        });
+
+        // Card buttons
+        this.cards.forEach(card => {
+            if (card.dataset.page) {
+                card.addEventListener('click', () => {
+                    this.showPage(card.dataset.page);
+                });
+            }
+        });
+
+        // Form submissions
+        this.bookForm.addEventListener('submit', (e) => this.handleBookFormSubmit(e));
+        this.memberForm.addEventListener('submit', (e) => this.handleMemberFormSubmit(e));
+        this.loginForm.addEventListener('submit', (e) => this.handleLoginFormSubmit(e));
+        this.signupForm.addEventListener('submit', (e) => this.handleSignupFormSubmit(e));
+        this.issueBookForm.addEventListener('submit', (e) => this.handleIssueBookFormSubmit(e));
+        this.returnBookForm.addEventListener('submit', (e) => this.handleReturnBookFormSubmit(e));
+
+        // Issue and return book buttons
+        this.issueBookBtn.addEventListener('click', () => this.showIssueBookModal());
+        this.returnBookBtn.addEventListener('click', () => this.showReturnBookModal());
+
+        // Close modals when clicking X
+        document.querySelectorAll('.close-modal').forEach(closeBtn => {
+            closeBtn.addEventListener('click', () => {
+                this.issueBookModal.style.display = 'none';
+                this.returnBookModal.style.display = 'none';
+            });
+        });
+
+        // Close modals when clicking cancel buttons
+        document.querySelectorAll('.btn-cancel').forEach(btn => {
+            btn.addEventListener('click', () => {
+                this.issueBookModal.style.display = 'none';
+                this.returnBookModal.style.display = 'none';
+            });
+        });
+
+        // Close modals when clicking outside
+        window.addEventListener('click', (e) => {
+            if (e.target === this.issueBookModal) this.issueBookModal.style.display = 'none';
+            if (e.target === this.returnBookModal) this.returnBookModal.style.display = 'none';
+        });
+
+        // Handle book edit and delete
+        this.booksList.addEventListener('click', (e) => this.handleBooksListClick(e));
+
+        // Handle member edit and delete
+        this.membersList.addEventListener('click', (e) => this.handleMembersListClick(e));
+
+        // Cancel buttons
+        this.bookCancelBtn.addEventListener('click', () => this.resetBookForm());
+        this.memberCancelBtn.addEventListener('click', () => this.resetMemberForm());
+
+        // When member is selected in return modal, update books dropdown
+        this.returnMemberSelect.addEventListener('change', () => this.updateReturnBookDropdown());
+    },
+
+    // Show the selected page
+    showPage: function(pageName) {
+        // Hide all pages
+        Object.values(this.pages).forEach(page => {
+            if (page) page.classList.remove('active');
+        });
+
+        // Show the selected page
+        if (this.pages[pageName]) {
+            this.pages[pageName].classList.add('active');
+        } else {
+            this.pages['home'].classList.add('active');
         }
 
-        // Show toast notification
-        function showToast(message, type = 'success') {
-            toastMessage.textContent = message;
-            toast.className = `toast toast-${type} show`;
-            
-            setTimeout(() => {
-                toast.className = 'toast';
-            }, 3000);
+        // Update active nav item
+        this.navItems.forEach(item => {
+            if (item) {
+                item.classList.remove('active');
+                if (item.dataset.page === pageName) {
+                    item.classList.add('active');
+                }
+            }
+        });
+
+        // Special handling for certain pages
+        if (pageName === 'home') {
+            this.updateStats();
+        } else if (pageName === 'books') {
+            this.renderBooks();
+        } else if (pageName === 'members') {
+            this.renderMembers();
+        }
+    },
+
+    // Render books in the table
+    renderBooks: function() {
+        const books = LibraryModel.getBooks();
+        this.booksList.innerHTML = '';
+
+        if (books.length === 0) {
+            const row = document.createElement('tr');
+            row.innerHTML = '<td colspan="7" class="text-center">No books found</td>';
+            this.booksList.appendChild(row);
+            return;
         }
 
-        // Setup all event listeners
-        function setupEventListeners() {
-            // Navigation items
-            navItems.forEach(item => {
-                if (item.dataset.page) {
-                    item.addEventListener('click', () => {
-                        showPage(item.dataset.page);
-                    });
-                }
-            });
-            
-            // Logout button
-            logoutBtn.addEventListener('click', () => {
-                showPage('login');
-            });
-            
-            // Page links
-            showSignup.addEventListener('click', (e) => {
-                e.preventDefault();
-                showPage('signup');
-            });
-            
-            showLogin.addEventListener('click', (e) => {
-                e.preventDefault();
-                showPage('login');
-            });
-            
-            showHomeLinks.forEach(link => {
-                link.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    showPage('home');
-                });
-            });
-            
-            // Card buttons
-            cards.forEach(card => {
-                if (card.dataset.page) {
-                    card.addEventListener('click', () => {
-                        showPage(card.dataset.page);
-                    });
-                }
-            });
-            
-            // Form submissions
-            bookForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                const id = bookIdField.value;
-                const title = document.getElementById('book-title').value;
-                const author = document.getElementById('book-author').value;
-                const isbn = document.getElementById('book-isbn').value;
-                const category = document.getElementById('book-category').value;
-                
-                let books = JSON.parse(localStorage.getItem('books') || []);
-                
-                if (id) {
-                    // Update existing book
-                    books = books.map(book => 
-                        book.id === parseInt(id) ? {...book, title, author, isbn, category} : book
-                    );
-                    showToast('Book updated successfully!');
-                } else {
-                    // Add new book
-                    const newId = books.length > 0 ? Math.max(...books.map(b => b.id)) + 1 : 1;
-                    const newBook = {
-                        id: newId,
-                        title,
-                        author,
-                        isbn,
-                        category,
-                        status: "Available"
-                    };
-                    
-                    books.push(newBook);
-                    showToast(`"${title}" has been added to the library!`);
-                }
-                
-                localStorage.setItem('books', JSON.stringify(books));
-                renderBooks();
-                updateStats();
-                
-                // Reset form
-                bookForm.reset();
-                bookIdField.value = '';
-                bookSubmitBtn.textContent = 'Add Book';
-                bookFormTitle.textContent = 'Add New Book';
-                bookCancelBtn.style.display = 'none';
-            });
-            
-            memberForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                const id = memberIdField.value;
-                const name = document.getElementById('member-name').value;
-                const email = document.getElementById('member-email').value;
-                const phone = document.getElementById('member-phone').value;
-                const type = document.getElementById('member-type').value;
-                
-                let members = JSON.parse(localStorage.getItem('members') || []);
-                
-                if (id) {
-                    // Update existing member
-                    members = members.map(member => 
-                        member.id === parseInt(id) ? {...member, name, email, phone, type} : member
-                    );
-                    showToast('Member updated successfully!');
-                } else {
-                    // Add new member
-                    const newId = members.length > 0 ? Math.max(...members.map(m => m.id)) + 1 : 1;
-                    const newMember = {
-                        id: newId,
-                        name,
-                        email,
-                        phone,
-                        type,
-                        books: 0
-                    };
-                    
-                    members.push(newMember);
-                    showToast(`${name} has been added as a new member!`);
-                }
-                
-                localStorage.setItem('members', JSON.stringify(members));
-                renderMembers();
-                updateStats();
-                
-                // Reset form
-                memberForm.reset();
-                memberIdField.value = '';
-                memberSubmitBtn.textContent = 'Add Member';
-                memberFormTitle.textContent = 'Add New Member';
-                memberCancelBtn.style.display = 'none';
-            });
-            
-            loginForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                const username = document.getElementById('username').value;
-                const password = document.getElementById('password').value;
-                
-                const users = JSON.parse(localStorage.getItem('users') || '[]');
-                const user = users.find(u => u.email === username && u.password === password);
-                
-                if (user) {
-                    showPage('home');
-                } else {
-                    showToast('Invalid username or password', 'error');
-                }
-            });
-            
-            signupForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                const fullname = document.getElementById('fullname').value;
-                const email = document.getElementById('signup-email').value;
-                const password = document.getElementById('signup-password').value;
-                const type = document.getElementById('signup-type').value;
-                
-                const users = JSON.parse(localStorage.getItem('users') || '[]');
-                
-                // Check if user already exists
-                if (users.some(u => u.email === email)) {
-                    showToast('User with this email already exists', 'error');
-                    return;
-                }
-                
-                // Add new user
-                const newId = users.length > 0 ? Math.max(...users.map(u => u.id)) + 1 : 1;
-                const newUser = {
-                    id: newId,
-                    name: fullname,
-                    email,
-                    password,
-                    type
-                };
-                
-                users.push(newUser);
-                localStorage.setItem('users', JSON.stringify(users));
-                
-                showToast('Account created successfully! You can now login.', 'info');
-                signupForm.reset();
-                showPage('login');
-            });
-            
-            // Issue and return book buttons
-            issueBookBtn.addEventListener('click', () => {
-                // Populate member dropdown
-                issueMemberSelect.innerHTML = '';
-                const members = JSON.parse(localStorage.getItem('members') || '[]');
-                members.forEach(member => {
-                    const option = document.createElement('option');
-                    option.value = member.id;
-                    option.textContent = `${member.name} (${member.type})`;
-                    issueMemberSelect.appendChild(option);
-                });
-                
-                // Populate book dropdown with available books
-                issueBookSelect.innerHTML = '';
-                const books = JSON.parse(localStorage.getItem('books') || '[]');
-                books.filter(book => book.status === 'Available').forEach(book => {
-                    const option = document.createElement('option');
-                    option.value = book.id;
-                    option.textContent = `${book.title} by ${book.author}`;
-                    issueBookSelect.appendChild(option);
-                });
-                
-                // Set dates
-                const today = new Date();
-                document.getElementById('issue-date').value = today.toISOString().split('T')[0];
-                
-                const dueDate = new Date();
-                dueDate.setDate(today.getDate() + 14); // 14 days from now
-                document.getElementById('due-date').value = dueDate.toISOString().split('T')[0];
-                
-                issueBookModal.style.display = 'flex';
-            });
-            
-            returnBookBtn.addEventListener('click', () => {
-                // Populate member dropdown
-                returnMemberSelect.innerHTML = '';
-                const members = JSON.parse(localStorage.getItem('members') || '[]');
-                members.forEach(member => {
-                    const option = document.createElement('option');
-                    option.value = member.id;
-                    option.textContent = `${member.name} (${member.type})`;
-                    returnMemberSelect.appendChild(option);
-                });
-                
-                // Set today's date for return
-                const today = new Date();
-                document.getElementById('return-date').value = today.toISOString().split('T')[0];
-                
-                returnBookModal.style.display = 'flex';
-            });
-            
-            // Handle book issue form submission
-            issueBookForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                const memberId = parseInt(issueMemberSelect.value);
-                const bookId = parseInt(issueBookSelect.value);
-                const issueDate = document.getElementById('issue-date').value;
-                const dueDate = document.getElementById('due-date').value;
-                
-                // Update book status
-                let books = JSON.parse(localStorage.getItem('books') || '[]');
-                books = books.map(book => 
-                    book.id === bookId ? {...book, status: "Checked Out"} : book
-                );
-                localStorage.setItem('books', JSON.stringify(books));
-                
-                // Update member book count
-                let members = JSON.parse(localStorage.getItem('members') || '[]');
-                members = members.map(member => 
-                    member.id === memberId ? {...member, books: member.books + 1} : member
-                );
-                localStorage.setItem('members', JSON.stringify(members));
-                
-                // Add transaction
-                const transactions = JSON.parse(localStorage.getItem('transactions') || '[]');
-                const transactionId = transactions.length > 0 ? Math.max(...transactions.map(t => t.id)) + 1 : 1;
-                
-                transactions.push({
-                    id: transactionId,
-                    bookId,
-                    memberId,
-                    issueDate,
-                    dueDate,
-                    returnDate: null,
-                    fine: 0
-                });
-                localStorage.setItem('transactions', JSON.stringify(transactions));
-                
-                // Close modal and update UI
-                issueBookModal.style.display = 'none';
-                renderBooks();
-                renderMembers();
-                updateStats();
-                showToast('Book issued successfully!');
-            });
-            
-            // Handle book return form submission
-            returnBookForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                const memberId = parseInt(returnMemberSelect.value);
-                const bookId = parseInt(returnBookSelect.value);
-                const returnDate = document.getElementById('return-date').value;
-                const fineAmount = parseFloat(document.getElementById('fine-amount').value) || 0;
-                
-                // Update book status
-                let books = JSON.parse(localStorage.getItem('books') || '[]');
-                books = books.map(book => 
-                    book.id === bookId ? {...book, status: "Available"} : book
-                );
-                localStorage.setItem('books', JSON.stringify(books));
-                
-                // Update member book count
-                let members = JSON.parse(localStorage.getItem('members') || '[]');
-                members = members.map(member => 
-                    member.id === memberId ? {...member, books: member.books - 1} : member
-                );
-                localStorage.setItem('members', JSON.stringify(members));
-                
-                // Update transaction
-                let transactions = JSON.parse(localStorage.getItem('transactions') || '[]');
-                transactions = transactions.map(transaction => {
-                    if (transaction.bookId === bookId && transaction.memberId === memberId && !transaction.returnDate) {
-                        return {...transaction, returnDate, fine: fineAmount};
-                    }
-                    return transaction;
-                });
-                localStorage.setItem('transactions', JSON.stringify(transactions));
-                
-                // Close modal and update UI
-                returnBookModal.style.display = 'none';
-                renderBooks();
-                renderMembers();
-                updateStats();
-                showToast('Book returned successfully!');
-            });
-            
-            // Close modals when clicking X
-            document.querySelectorAll('.close-modal').forEach(closeBtn => {
-                closeBtn.addEventListener('click', () => {
-                    issueBookModal.style.display = 'none';
-                    returnBookModal.style.display = 'none';
-                });
-            });
-            
-            // Close modals when clicking cancel buttons
-            document.querySelectorAll('.btn-cancel').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    issueBookModal.style.display = 'none';
-                    returnBookModal.style.display = 'none';
-                });
-            });
-            
-            // Close modals when clicking outside
-            window.addEventListener('click', (e) => {
-                if (e.target === issueBookModal) issueBookModal.style.display = 'none';
-                if (e.target === returnBookModal) returnBookModal.style.display = 'none';
-            });
-            
-            // Handle book edit and delete
-            booksList.addEventListener('click', (e) => {
-                const target = e.target;
-                if (target.classList.contains('edit-btn')) {
-                    const bookId = parseInt(target.dataset.id);
-                    editBook(bookId);
-                } else if (target.classList.contains('delete-btn')) {
-                    const bookId = parseInt(target.dataset.id);
-                    deleteBook(bookId);
-                }
-            });
-            
-            // Handle member edit and delete
-            membersList.addEventListener('click', (e) => {
-                const target = e.target;
-                if (target.classList.contains('edit-btn')) {
-                    const memberId = parseInt(target.dataset.id);
-                    editMember(memberId);
-                } else if (target.classList.contains('delete-btn')) {
-                    const memberId = parseInt(target.dataset.id);
-                    deleteMember(memberId);
-                } else if (target.classList.contains('issue-btn')) {
-                    const memberId = parseInt(target.dataset.id);
-                    issueBookToMember(memberId);
-                }
-            });
-            
-            // Cancel buttons
-            bookCancelBtn.addEventListener('click', () => {
-                bookForm.reset();
-                bookIdField.value = '';
-                bookSubmitBtn.textContent = 'Add Book';
-                bookFormTitle.textContent = 'Add New Book';
-                bookCancelBtn.style.display = 'none';
-            });
-            
-            memberCancelBtn.addEventListener('click', () => {
-                memberForm.reset();
-                memberIdField.value = '';
-                memberSubmitBtn.textContent = 'Add Member';
-                memberFormTitle.textContent = 'Add New Member';
-                memberCancelBtn.style.display = 'none';
-            });
-            
-            // When member is selected in return modal, update books dropdown
-            returnMemberSelect.addEventListener('change', () => {
-                const memberId = parseInt(returnMemberSelect.value);
-                const books = JSON.parse(localStorage.getItem('books') || '[]');
-                const transactions = JSON.parse(localStorage.getItem('transactions') || '[]');
-                
-                // Get books checked out by this member
-                const checkedOutBooks = transactions
-                    .filter(t => t.memberId === memberId && !t.returnDate)
-                    .map(t => books.find(b => b.id === t.bookId));
-                
-                returnBookSelect.innerHTML = '';
-                checkedOutBooks.forEach(book => {
-                    const option = document.createElement('option');
-                    option.value = book.id;
-                    option.textContent = `${book.title} by ${book.author}`;
-                    returnBookSelect.appendChild(option);
-                });
-            });
+        books.forEach(book => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${book.id}</td>
+                <td>${book.title}</td>
+                <td>${book.author}</td>
+                <td>${book.isbn}</td>
+                <td>${book.category}</td>
+                <td><span class="${book.status === 'Available' ? 'status-available' : 'status-checked-out'}">${book.status}</span></td>
+                <td class="actions-cell">
+                    <button class="action-btn edit-btn" data-id="${book.id}">Edit</button>
+                    <button class="action-btn delete-btn" data-id="${book.id}">Delete</button>
+                </td>
+            `;
+            this.booksList.appendChild(row);
+        });
+    },
+
+    // Render members in the table
+    renderMembers: function() {
+        const members = LibraryModel.getMembers();
+        this.membersList.innerHTML = '';
+
+        if (members.length === 0) {
+            const row = document.createElement('tr');
+            row.innerHTML = '<td colspan="7" class="text-center">No members found</td>';
+            this.membersList.appendChild(row);
+            return;
         }
 
-        // Edit book function
-        function editBook(bookId) {
-            const books = JSON.parse(localStorage.getItem('books') || '[]');
-            const book = books.find(b => b.id === bookId);
+        members.forEach(member => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${member.id}</td>
+                <td>${member.name}</td>
+                <td>${member.email}</td>
+                <td>${member.phone}</td>
+                <td>${member.type}</td>
+                <td>${member.books}</td>
+                <td class="actions-cell">
+                    <button class="action-btn edit-btn" data-id="${member.id}">Edit</button>
+                    <button class="action-btn delete-btn" data-id="${member.id}">Delete</button>
+                    <button class="action-btn issue-btn" data-id="${member.id}">Issue Book</button>
+                </td>
+            `;
+            this.membersList.appendChild(row);
+        });
+    },
+
+    // Update statistics
+    updateStats: function() {
+        const stats = LibraryModel.getStats();
+        this.totalBooks.textContent = stats.totalBooks;
+        this.totalMembers.textContent = stats.totalMembers;
+        this.transactionsToday.textContent = stats.transactionsToday;
+        this.overdueBooks.textContent = stats.overdueBooks;
+    },
+
+    // Show toast notification
+    showToast: function(message, type = 'success') {
+        this.toastMessage.textContent = message;
+        
+        // Set icon based on type
+        let icon = 'fa-check-circle';
+        if (type === 'error') icon = 'fa-exclamation-circle';
+        if (type === 'info') icon = 'fa-info-circle';
+        
+        this.toast.innerHTML = `<i class="fas ${icon}"></i><span id="toast-message">${message}</span>`;
+        this.toast.className = `toast toast-${type} show`;
+        
+        setTimeout(() => {
+            this.toast.className = 'toast';
+        }, 3000);
+    },
+
+    // Handle book form submission
+    handleBookFormSubmit: function(e) {
+        e.preventDefault();
+        
+        const id = this.bookIdField.value;
+        const title = document.getElementById('book-title').value.trim();
+        const author = document.getElementById('book-author').value.trim();
+        const isbn = document.getElementById('book-isbn').value.trim();
+        const category = document.getElementById('book-category').value;
+        
+        if (!title || !author || !isbn) {
+            this.showToast('Please fill in all required fields', 'error');
+            return;
+        }
+        
+        const book = { id: id ? parseInt(id) : null, title, author, isbn, category };
+        
+        if (LibraryModel.saveBook(book)) {
+            this.showToast(id ? 'Book updated successfully!' : `"${title}" has been added to the library!`);
+            this.renderBooks();
+            this.updateStats();
+            this.resetBookForm();
+        } else {
+            this.showToast('Failed to save book', 'error');
+        }
+    },
+
+    // Handle member form submission
+    handleMemberFormSubmit: function(e) {
+        e.preventDefault();
+        
+        const id = this.memberIdField.value;
+        const name = document.getElementById('member-name').value.trim();
+        const email = document.getElementById('member-email').value.trim();
+        const phone = document.getElementById('member-phone').value.trim();
+        const type = document.getElementById('member-type').value;
+        
+        if (!name || !email || !phone) {
+            this.showToast('Please fill in all required fields', 'error');
+            return;
+        }
+        
+        // Simple email validation
+        if (!email.includes('@') || !email.includes('.')) {
+            this.showToast('Please enter a valid email address', 'error');
+            return;
+        }
+        
+        const member = { id: id ? parseInt(id) : null, name, email, phone, type };
+        
+        if (LibraryModel.saveMember(member)) {
+            this.showToast(id ? 'Member updated successfully!' : `${name} has been added as a new member!`);
+            this.renderMembers();
+            this.updateStats();
+            this.resetMemberForm();
+        } else {
+            this.showToast('Failed to save member', 'error');
+        }
+    },
+
+    // Handle login form submission
+    handleLoginFormSubmit: function(e) {
+        e.preventDefault();
+        
+        const email = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value.trim();
+        
+        if (!email || !password) {
+            this.showToast('Please enter both email and password', 'error');
+            return;
+        }
+        
+        const result = LibraryModel.authenticateUser(email, password);
+        
+        if (result.success) {
+            this.showToast(`Welcome, ${result.user.name}!`, 'success');
+            this.showPage('home');
+            this.loginForm.reset();
+            sessionStorage.setItem('currentUser', JSON.stringify(result.user));
+        } else {
+            this.showToast(result.message || 'Invalid email or password', 'error');
+        }
+    },
+
+    // Handle signup form submission
+    handleSignupFormSubmit: function(e) {
+        e.preventDefault();
+        
+        const name = document.getElementById('fullname').value.trim();
+        const email = document.getElementById('signup-email').value.trim();
+        const password = document.getElementById('signup-password').value.trim();
+        const type = document.getElementById('signup-type').value;
+        
+        if (!name || !email || !password) {
+            this.showToast('Please fill in all required fields', 'error');
+            return;
+        }
+        
+        // Simple email validation
+        if (!email.includes('@') || !email.includes('.')) {
+            this.showToast('Please enter a valid email address', 'error');
+            return;
+        }
+        
+        // Password length check
+        if (password.length < 6) {
+            this.showToast('Password must be at least 6 characters', 'error');
+            return;
+        }
+        
+        const user = { name, email, password, type };
+        const result = LibraryModel.registerUser(user);
+        
+        if (result.success) {
+            this.showToast(result.message, 'info');
+            this.signupForm.reset();
+            this.showPage('login');
+        } else {
+            this.showToast(result.message || 'Registration failed', 'error');
+        }
+    },
+
+    // Handle issue book form submission
+    handleIssueBookFormSubmit: function(e) {
+        e.preventDefault();
+        
+        const memberId = parseInt(this.issueMemberSelect.value);
+        const bookId = parseInt(this.issueBookSelect.value);
+        const issueDate = document.getElementById('issue-date').value;
+        const dueDate = document.getElementById('due-date').value;
+        
+        if (!memberId || !bookId || !issueDate || !dueDate) {
+            this.showToast('Please fill in all required fields', 'error');
+            return;
+        }
+        
+        if (LibraryModel.issueBook(bookId, memberId, issueDate, dueDate)) {
+            this.showToast('Book issued successfully!');
+            this.issueBookModal.style.display = 'none';
+            this.renderBooks();
+            this.renderMembers();
+            this.updateStats();
+        } else {
+            this.showToast('Failed to issue book', 'error');
+        }
+    },
+
+    // Handle return book form submission
+    handleReturnBookFormSubmit: function(e) {
+        e.preventDefault();
+        
+        const memberId = parseInt(this.returnMemberSelect.value);
+        const bookId = parseInt(this.returnBookSelect.value);
+        const returnDate = document.getElementById('return-date').value;
+        const fineAmount = parseFloat(document.getElementById('fine-amount').value) || 0;
+        
+        if (!memberId || !bookId || !returnDate) {
+            this.showToast('Please fill in all required fields', 'error');
+            return;
+        }
+        
+        if (LibraryModel.returnBook(bookId, memberId, returnDate, fineAmount)) {
+            this.showToast('Book returned successfully!');
+            this.returnBookModal.style.display = 'none';
+            this.renderBooks();
+            this.renderMembers();
+            this.updateStats();
+        } else {
+            this.showToast('Failed to return book', 'error');
+        }
+    },
+
+    // Show issue book modal
+    showIssueBookModal: function() {
+        // Populate member dropdown
+        this.issueMemberSelect.innerHTML = '';
+        const members = LibraryModel.getMembers();
+        
+        if (members.length === 0) {
+            this.showToast('No members available. Please add members first.', 'error');
+            return;
+        }
+        
+        members.forEach(member => {
+            const option = document.createElement('option');
+            option.value = member.id;
+            option.textContent = `${member.name} (${member.type})`;
+            this.issueMemberSelect.appendChild(option);
+        });
+        
+        // Populate book dropdown with available books
+        this.issueBookSelect.innerHTML = '';
+        const availableBooks = LibraryModel.getAvailableBooks();
+        
+        if (availableBooks.length === 0) {
+            this.showToast('No available books to issue.', 'error');
+            return;
+        }
+        
+        availableBooks.forEach(book => {
+            const option = document.createElement('option');
+            option.value = book.id;
+            option.textContent = `${book.title} by ${book.author}`;
+            this.issueBookSelect.appendChild(option);
+        });
+        
+        // Set dates
+        const today = new Date();
+        document.getElementById('issue-date').value = today.toISOString().split('T')[0];
+        
+        const dueDate = new Date();
+        dueDate.setDate(today.getDate() + 14); // 14 days from now
+        document.getElementById('due-date').value = dueDate.toISOString().split('T')[0];
+        
+        this.issueBookModal.style.display = 'flex';
+    },
+
+    // Show return book modal
+    showReturnBookModal: function() {
+        // Populate member dropdown
+        this.returnMemberSelect.innerHTML = '';
+        const members = LibraryModel.getMembers();
+        
+        if (members.length === 0) {
+            this.showToast('No members available.', 'error');
+            return;
+        }
+        
+        members.forEach(member => {
+            const option = document.createElement('option');
+            option.value = member.id;
+            option.textContent = `${member.name} (${member.type})`;
+            this.returnMemberSelect.appendChild(option);
+        });
+        
+        // Set today's date for return
+        const today = new Date();
+        document.getElementById('return-date').value = today.toISOString().split('T')[0];
+        
+        this.returnBookModal.style.display = 'flex';
+    },
+
+    // Update return book dropdown when member is selected
+    updateReturnBookDropdown: function() {
+        const memberId = parseInt(this.returnMemberSelect.value);
+        const checkedOutBooks = LibraryModel.getCheckedOutBooks(memberId);
+        
+        this.returnBookSelect.innerHTML = '';
+        
+        if (checkedOutBooks.length === 0) {
+            const option = document.createElement('option');
+            option.value = '';
+            option.textContent = 'No books checked out';
+            this.returnBookSelect.appendChild(option);
+            return;
+        }
+        
+        checkedOutBooks.forEach(book => {
+            const option = document.createElement('option');
+            option.value = book.id;
+            option.textContent = `${book.title} by ${book.author}`;
+            this.returnBookSelect.appendChild(option);
+        });
+    },
+
+    // Handle books list click events (edit/delete)
+    handleBooksListClick: function(e) {
+        const target = e.target;
+        
+        if (target.classList.contains('edit-btn')) {
+            const bookId = parseInt(target.dataset.id);
+            this.editBook(bookId);
+        } else if (target.classList.contains('delete-btn')) {
+            const bookId = parseInt(target.dataset.id);
+            this.deleteBook(bookId);
+        }
+    },
+
+    // Handle members list click events (edit/delete/issue)
+    handleMembersListClick: function(e) {
+        const target = e.target;
+        
+        if (target.classList.contains('edit-btn')) {
+            const memberId = parseInt(target.dataset.id);
+            this.editMember(memberId);
+        } else if (target.classList.contains('delete-btn')) {
+            const memberId = parseInt(target.dataset.id);
+            this.deleteMember(memberId);
+        } else if (target.classList.contains('issue-btn')) {
+            const memberId = parseInt(target.dataset.id);
+            this.issueBookToMember(memberId);
+        }
+    },
+
+    // Edit book
+    editBook: function(bookId) {
+        const books = LibraryModel.getBooks();
+        const book = books.find(b => b.id === bookId);
+        
+        if (book) {
+            document.getElementById('book-title').value = book.title;
+            document.getElementById('book-author').value = book.author;
+            document.getElementById('book-isbn').value = book.isbn;
+            document.getElementById('book-category').value = book.category;
+            this.bookIdField.value = book.id;
             
-            if (book) {
-                document.getElementById('book-title').value = book.title;
-                document.getElementById('book-author').value = book.author;
-                document.getElementById('book-isbn').value = book.isbn;
-                document.getElementById('book-category').value = book.category;
-                bookIdField.value = book.id;
-                
-                bookSubmitBtn.textContent = 'Update Book';
-                bookFormTitle.textContent = 'Edit Book';
-                bookCancelBtn.style.display = 'block';
-                
-                // Scroll to form
-                document.getElementById('book-form').scrollIntoView({ behavior: 'smooth' });
+            this.bookSubmitBtn.textContent = 'Update Book';
+            this.bookFormTitle.textContent = 'Edit Book';
+            this.bookCancelBtn.style.display = 'block';
+            
+            // Scroll to form
+            this.bookForm.scrollIntoView({ behavior: 'smooth' });
+        }
+    },
+
+    // Delete book
+    deleteBook: function(bookId) {
+        if (confirm('Are you sure you want to delete this book?')) {
+            if (LibraryModel.deleteBook(bookId)) {
+                this.showToast('Book deleted successfully!');
+                this.renderBooks();
+                this.updateStats();
+            } else {
+                this.showToast('Failed to delete book', 'error');
             }
         }
+    },
 
-        // Delete book function
-        function deleteBook(bookId) {
-            if (confirm('Are you sure you want to delete this book?')) {
-                let books = JSON.parse(localStorage.getItem('books') || '[]');
-                books = books.filter(book => book.id !== bookId);
-                localStorage.setItem('books', JSON.stringify(books));
-                
-                renderBooks();
-                updateStats();
-                showToast('Book deleted successfully!');
+    // Edit member
+    editMember: function(memberId) {
+        const members = LibraryModel.getMembers();
+        const member = members.find(m => m.id === memberId);
+        
+        if (member) {
+            document.getElementById('member-name').value = member.name;
+            document.getElementById('member-email').value = member.email;
+            document.getElementById('member-phone').value = member.phone;
+            document.getElementById('member-type').value = member.type;
+            this.memberIdField.value = member.id;
+            
+            this.memberSubmitBtn.textContent = 'Update Member';
+            this.memberFormTitle.textContent = 'Edit Member';
+            this.memberCancelBtn.style.display = 'block';
+            
+            // Scroll to form
+            this.memberForm.scrollIntoView({ behavior: 'smooth' });
+        }
+    },
+
+    // Delete member
+    deleteMember: function(memberId) {
+        if (confirm('Are you sure you want to delete this member?')) {
+            if (LibraryModel.deleteMember(memberId)) {
+                this.showToast('Member deleted successfully!');
+                this.renderMembers();
+                this.updateStats();
+            } else {
+                this.showToast('Failed to delete member', 'error');
             }
         }
+    },
 
-        // Edit member function
-        function editMember(memberId) {
-            const members = JSON.parse(localStorage.getItem('members') || '[]');
-            const member = members.find(m => m.id === memberId);
-            
-            if (member) {
-                document.getElementById('member-name').value = member.name;
-                document.getElementById('member-email').value = member.email;
-                document.getElementById('member-phone').value = member.phone;
-                document.getElementById('member-type').value = member.type;
-                memberIdField.value = member.id;
-                
-                memberSubmitBtn.textContent = 'Update Member';
-                memberFormTitle.textContent = 'Edit Member';
-                memberCancelBtn.style.display = 'block';
-                
-                // Scroll to form
-                document.getElementById('member-form').scrollIntoView({ behavior: 'smooth' });
-            }
+    // Issue book to a specific member
+    issueBookToMember: function(memberId) {
+        // Set the member in the issue modal
+        this.issueMemberSelect.value = memberId;
+        
+        // Populate book dropdown with available books
+        this.issueBookSelect.innerHTML = '';
+        const availableBooks = LibraryModel.getAvailableBooks();
+        
+        if (availableBooks.length === 0) {
+            this.showToast('No available books to issue.', 'error');
+            return;
         }
+        
+        availableBooks.forEach(book => {
+            const option = document.createElement('option');
+            option.value = book.id;
+            option.textContent = `${book.title} by ${book.author}`;
+            this.issueBookSelect.appendChild(option);
+        });
+        
+        // Set dates
+        const today = new Date();
+        document.getElementById('issue-date').value = today.toISOString().split('T')[0];
+        
+        const dueDate = new Date();
+        dueDate.setDate(today.getDate() + 14); // 14 days from now
+        document.getElementById('due-date').value = dueDate.toISOString().split('T')[0];
+        
+        this.issueBookModal.style.display = 'flex';
+    },
 
-        // Delete member function
-        function deleteMember(memberId) {
-            if (confirm('Are you sure you want to delete this member?')) {
-                let members = JSON.parse(localStorage.getItem('members') || '[]');
-                members = members.filter(member => member.id !== memberId);
-                localStorage.setItem('members', JSON.stringify(members));
-                
-                renderMembers();
-                updateStats();
-                showToast('Member deleted successfully!');
-            }
-        }
+    // Reset book form
+    resetBookForm: function() {
+        this.bookForm.reset();
+        this.bookIdField.value = '';
+        this.bookSubmitBtn.textContent = 'Add Book';
+        this.bookFormTitle.textContent = 'Add New Book';
+        this.bookCancelBtn.style.display = 'none';
+    },
 
-        // Issue book to a specific member
-        function issueBookToMember(memberId) {
-            // Set the member in the issue modal
-            issueMemberSelect.value = memberId;
-            
-            // Populate book dropdown with available books
-            issueBookSelect.innerHTML = '';
-            const books = JSON.parse(localStorage.getItem('books') || '[]');
-            books.filter(book => book.status === 'Available').forEach(book => {
-                const option = document.createElement('option');
-                option.value = book.id;
-                option.textContent = `${book.title} by ${book.author}`;
-                issueBookSelect.appendChild(option);
-            });
-            
-            // Set dates
-            const today = new Date();
-            document.getElementById('issue-date').value = today.toISOString().split('T')[0];
-            
-            const dueDate = new Date();
-            dueDate.setDate(today.getDate() + 14); // 14 days from now
-            document.getElementById('due-date').value = dueDate.toISOString().split('T')[0];
-            
-            issueBookModal.style.display = 'flex';
-        }
+    // Reset member form
+    resetMemberForm: function() {
+        this.memberForm.reset();
+        this.memberIdField.value = '';
+        this.memberSubmitBtn.textContent = 'Add Member';
+        this.memberFormTitle.textContent = 'Add New Member';
+        this.memberCancelBtn.style.display = 'none';
+    }
+};
 
-        // Initialize the application when DOM is loaded
-        document.addEventListener('DOMContentLoaded', initApp);
+// Initialize the application when DOM is loaded
+document.addEventListener('DOMContentLoaded', () => LibraryController.init());
+
+// Mobile menu toggle (add this to your HTML)
+function toggleMobileMenu() {
+    const nav = document.querySelector('.navbar nav ul');
+    nav.classList.toggle('mobile-visible');
+}
     </script>
 </body>
 </html>
